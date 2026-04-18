@@ -29,7 +29,7 @@ import { createRoot } from "react-dom/client";
 import "./splash.css";
 import sprocketHammerSvg from "./assets/sprocket-hammer.svg?raw";
 import r3pLogoUrl from "./assets/r3p-logo-transparent.svg";
-import { APP_VERSION } from "./version.js";
+import { APP_VERSION } from "../utils/version.js";
 
 // ── Runtime Tauri guard ────────────────────────────────────────────────────
 // window.__TAURI_INTERNALS__ is injected by the Tauri webview; absent in any

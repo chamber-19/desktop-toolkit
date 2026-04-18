@@ -1,6 +1,6 @@
 {
   "name": "@koraji95-coder/kc-framework",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Shared JS/React primitives for ROOT3POWER desktop tools",
   "license": "MIT",
   "type": "module",

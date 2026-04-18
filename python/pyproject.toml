@@ -1,10 +1,13 @@
 [project]
 name = "kc-framework"
-version = "1.0.0"
+version = "1.0.1"
 description = "Shared Python utilities for ROOT3POWER desktop tools"
 requires-python = ">=3.10"
 authors = [{ name = "Koraji95-coder" }]
 license = { text = "MIT" }
+dependencies = [
+    "pypdf>=4,<5",
+]
 
 [tool.setuptools.packages.find]
 where = ["."]
