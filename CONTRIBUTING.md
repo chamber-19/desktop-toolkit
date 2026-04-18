@@ -1,8 +1,8 @@
-# Contributing to kc-framework
+# Contributing to desktop-toolkit
 
 ## What this repo is
 
-`kc-framework` is framework code.  Every change here is immediately consumed by
+`desktop-toolkit` is framework code.  Every change here is immediately consumed by
 **all downstream tools** (`Transmittal-Builder`, `Drawing-List-Manager`, and any
 future ROOT3POWER desktop tools) the next time they bump their pin.
 
@@ -22,7 +22,7 @@ future ROOT3POWER desktop tools) the next time they bump their pin.
    ```
 5. **Consumer tools bump their pin** in a follow-up PR:
    - Python: update the `@v1.2.3` ref in `pyproject.toml`/`requirements.txt`
-   - JS: update the `#v1.2.3` hash in `package.json`
+   - JS: update the version in `package.json`
 
 ---
 
@@ -41,10 +41,10 @@ Add a migration note to `CHANGELOG.md` explaining what consumers need to change.
 
 ## Adding new utilities
 
-- **Python**: add to `python/kc_framework/utils/` and export from
-  `python/kc_framework/utils/__init__.py`.
-- **JS/React**: add to `js/packages/kc-framework/src/` and add an entry to
-  the `exports` field in `js/packages/kc-framework/package.json`.
+- **Python**: add to `python/chamber19_desktop_toolkit/utils/` and export from
+  `python/chamber19_desktop_toolkit/utils/__init__.py`.
+- **JS/React**: add to `js/packages/desktop-toolkit/src/` and add an entry to
+  the `exports` field in `js/packages/desktop-toolkit/package.json`.
 
 ---
 

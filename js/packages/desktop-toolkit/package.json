@@ -1,6 +1,6 @@
 {
-  "name": "@koraji95-coder/kc-framework",
-  "version": "1.0.1",
+  "name": "@chamber-19/desktop-toolkit",
+  "version": "1.1.0",
   "description": "Shared JS/React primitives for ROOT3POWER desktop tools",
   "license": "MIT",
   "type": "module",
@@ -14,5 +14,16 @@
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"
-  }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chamber-19/desktop-toolkit.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chamber-19/desktop-toolkit/issues"
+  },
+  "homepage": "https://github.com/chamber-19/desktop-toolkit#readme"
 }

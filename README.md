@@ -1,4 +1,4 @@
-# kc-framework
+# desktop-toolkit
 
 Shared scaffolding for ROOT3POWER desktop tools — extracted from
 [Transmittal-Builder v5.0.0](https://github.com/Koraji95-coder/Transmittal-Builder/releases/tag/v5.0.0).
@@ -14,10 +14,10 @@ For the full extraction inventory and migration plan see
 ## Repository layout
 
 ```
-kc-framework/
+desktop-toolkit/
 ├── python/
 │   ├── pyproject.toml                 ← Python package manifest
-│   └── kc_framework/
+│   └── chamber19_desktop_toolkit/
 │       ├── __init__.py
 │       ├── utils/
 │       │   ├── pdf_merge.py           ← PDF generation + merge
@@ -27,7 +27,7 @@ kc-framework/
 │           └── requirements-build.txt
 ├── js/
 │   └── packages/
-│       └── kc-framework/
+│       └── desktop-toolkit/
 │           ├── package.json           ← npm package manifest
 │           └── src/
 │               ├── ipc/
@@ -77,36 +77,44 @@ kc-framework/
 
 ## How tools consume this framework
 
-### Python (`kc_framework`)
+### Python (`chamber19_desktop_toolkit`)
 
 **pip (git dependency — pin exact tag):**
 
 ```toml
 # In your tool's pyproject.toml or requirements.txt
-kc-framework @ git+https://github.com/Koraji95-coder/kc-framework@v1.0.0#subdirectory=python
+chamber19-desktop-toolkit @ git+https://github.com/Koraji95-coder/kc-framework@v1.1.0#subdirectory=python
 ```
 
 **Usage:**
 
 ```python
-from kc_framework.utils.pdf_merge import build_combined_pdf
-from kc_framework.utils.email_sender import send_email
+from chamber19_desktop_toolkit.utils.pdf_merge import build_combined_pdf
+from chamber19_desktop_toolkit.utils.email_sender import send_email
 ```
 
-### JavaScript (`@koraji95-coder/kc-framework`)
+### JavaScript (`@chamber-19/desktop-toolkit`)
 
-**npm (git dependency — pin exact tag):**
+**npm (GitHub Packages registry):**
 
-```json
-"@koraji95-coder/kc-framework": "git+https://github.com/Koraji95-coder/kc-framework.git#v1.0.0&path:js/packages/kc-framework"
+1. Add a `.npmrc` file to your project root:
+
+```
+@chamber-19:registry=https://npm.pkg.github.com
+```
+
+2. Install the package:
+
+```bash
+npm install @chamber-19/desktop-toolkit
 ```
 
 **Usage:**
 
 ```js
-import { initBackendUrl, getBackendUrl } from "@koraji95-coder/kc-framework/ipc";
-import SplashApp from "@koraji95-coder/kc-framework/splash";
-import { APP_VERSION } from "@koraji95-coder/kc-framework/utils/version";
+import { initBackendUrl, getBackendUrl } from "@chamber-19/desktop-toolkit/ipc";
+import SplashApp from "@chamber-19/desktop-toolkit/splash";
+import { APP_VERSION } from "@chamber-19/desktop-toolkit/utils/version";
 ```
 
 ---

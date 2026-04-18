@@ -6,6 +6,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-04-18
+
+### Changed
+- Renamed Python distribution `kc-framework` → `chamber19-desktop-toolkit`.
+- Renamed Python import namespace `kc_framework` → `chamber19_desktop_toolkit` (source directory `python/kc_framework/` → `python/chamber19_desktop_toolkit/`).
+- Renamed npm package `@koraji95-coder/kc-framework` → `@chamber-19/desktop-toolkit` (source directory `js/packages/kc-framework/` → `js/packages/desktop-toolkit/`).
+- Added `publishConfig`, `repository`, `bugs`, and `homepage` fields to JS `package.json` in preparation for GitHub Packages publishing.
+
+### Notes
+- GitHub Packages publishing workflow (`publish.yml`) is coming in a follow-up PR (Phase 2).
+- Repo transfer from `Koraji95-coder/kc-framework` to `chamber-19/desktop-toolkit` is a follow-up manual step (Phase 3).
+
 ## [1.0.1] - 2026-04-18
 
 ### Fixed
