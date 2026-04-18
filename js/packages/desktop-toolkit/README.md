@@ -1,4 +1,4 @@
-# @koraji95-coder/kc-framework
+# @chamber-19/desktop-toolkit
 
 Shared JS/React primitives for ROOT3POWER desktop tools.
 
@@ -14,8 +14,8 @@ Shared JS/React primitives for ROOT3POWER desktop tools.
 ## Usage
 
 ```js
-import { initBackendUrl, getBackendUrl } from "@koraji95-coder/kc-framework/ipc";
-import { APP_VERSION } from "@koraji95-coder/kc-framework/utils/version";
+import { initBackendUrl, getBackendUrl } from "@chamber-19/desktop-toolkit/ipc";
+import { APP_VERSION } from "@chamber-19/desktop-toolkit/utils/version";
 ```
 
 See the root [README.md](../../../README.md) for full consumption instructions.

@@ -1,8 +1,8 @@
 {
-  "name": "kc-framework-monorepo",
+  "name": "desktop-toolkit-monorepo",
   "private": true,
   "version": "1.0.1",
-  "description": "Monorepo root for kc-framework — see js/packages/kc-framework for the published JS package and python/ for the Python package.",
+  "description": "Monorepo root for desktop-toolkit — see js/packages/desktop-toolkit for the published JS package and python/ for the Python package.",
   "license": "MIT",
   "workspaces": [
     "js/packages/*"
