@@ -67,7 +67,7 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  padding: 7px;
+  padding: 7px; /* inner breathing room so the SVG doesn't touch the rounded edges */
 }
 
 /* ── Title block ─────────────────────────────────────────────────────────── */
