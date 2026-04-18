@@ -83,7 +83,7 @@ desktop-toolkit/
 
 ```toml
 # In your tool's pyproject.toml or requirements.txt
-chamber19-desktop-toolkit @ git+https://github.com/Koraji95-coder/kc-framework@v1.1.0#subdirectory=python
+chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v1.1.0#subdirectory=python
 ```
 
 **Usage:**
@@ -95,15 +95,20 @@ from chamber19_desktop_toolkit.utils.email_sender import send_email
 
 ### JavaScript (`@chamber-19/desktop-toolkit`)
 
-**npm (GitHub Packages registry):**
+This package is published to GitHub Packages (not npmjs.com). You need a GitHub Personal Access Token with `read:packages` scope to install.
 
-1. Add a `.npmrc` file to your project root:
+**One-time setup in your project:**
 
-```
+Create or update `.npmrc` in your project root:
+
+```ini
 @chamber-19:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=YOUR_GITHUB_PAT
 ```
 
-2. Install the package:
+In CI, set `NODE_AUTH_TOKEN` from a secret instead.
+
+**Install:**
 
 ```bash
 npm install @chamber-19/desktop-toolkit

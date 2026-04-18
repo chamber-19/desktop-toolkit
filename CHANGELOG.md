@@ -14,9 +14,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Renamed npm package `@koraji95-coder/kc-framework` → `@chamber-19/desktop-toolkit` (source directory `js/packages/kc-framework/` → `js/packages/desktop-toolkit/`).
 - Added `publishConfig`, `repository`, `bugs`, and `homepage` fields to JS `package.json` in preparation for GitHub Packages publishing.
 
+### Added
+- `.github/workflows/publish.yml` — publishes `@chamber-19/desktop-toolkit` to GitHub Packages on strict semver tags (`v[0-9]+.[0-9]+.[0-9]+`); includes a version-match guard that aborts if the tag doesn't match `package.json`.
+- `fresh-consumer-install` CI job — on tag pushes, installs the just-published package into a clean temporary project and verifies every declared export resolves; catches publish-ordering bugs like the v1.0.1 export-map issue.
+
 ### Notes
-- GitHub Packages publishing workflow (`publish.yml`) is coming in a follow-up PR (Phase 2).
-- Repo transfer from `Koraji95-coder/kc-framework` to `chamber-19/desktop-toolkit` is a follow-up manual step (Phase 3).
+- Repo transfer from `Koraji95-coder/kc-framework` to `chamber-19/desktop-toolkit` completed as Phase 3 (manual step). `GITHUB_TOKEN` in this repo can now natively publish to the `@chamber-19` npm scope on GitHub Packages.
 
 ## [1.0.1] - 2026-04-18
 
