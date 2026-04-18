@@ -251,12 +251,12 @@ fn startup_sequence(app: tauri::AppHandle, child_arc: Arc<Mutex<Option<Child>>>)
     let start = Instant::now();
 
     // Read optional debug hold (dev only; no-op in production when unset).
-    let hold_ms: u64 = match std::env::var("TRANSMITTAL_SPLASH_HOLD_MS") {
+    let hold_ms: u64 = match std::env::var("SPLASH_HOLD_MS") {
         Ok(val) => match val.parse::<u64>() {
             Ok(ms) => ms,
             Err(_) => {
                 eprintln!(
-                    "[splash] TRANSMITTAL_SPLASH_HOLD_MS is set to {:?} but is not a valid u64; defaulting to 0",
+                    "[splash] SPLASH_HOLD_MS is set to {:?} but is not a valid u64; defaulting to 0",
                     val
                 );
                 0

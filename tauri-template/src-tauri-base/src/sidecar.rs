@@ -36,6 +36,12 @@ fn find_free_port() -> u16 {
 
 /// Locate the PyInstaller sidecar binary relative to the running executable.
 ///
+/// # Arguments
+/// * `sidecar_name` - The binary name **without** the `.exe` extension,
+///   e.g. `"my-tool-backend"`. This must match the `name` field in the
+///   PyInstaller spec and the `${TOOL_SIDECAR_NAME}` placeholder in
+///   `tauri.conf.json.template`.
+///
 /// Search order (all relative to the directory containing the app exe):
 ///   1. `binaries/<sidecar-name>/<sidecar-name>.exe`  ← NSIS layout
 ///   2. `<sidecar-name>/<sidecar-name>.exe`            ← flat layout

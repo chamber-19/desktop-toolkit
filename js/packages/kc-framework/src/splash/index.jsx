@@ -1,3 +1,4 @@
+/**
  * splash.jsx — Forge-branded animated splash screen.
  *
  * The forge scene (sprocket, hammer, sparks, tooth-glow, impact-flash) runs as
@@ -26,8 +27,8 @@
 import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { createRoot } from "react-dom/client";
 import "./splash.css";
-import sprocketHammerSvg from "./assets/splash/sprocket-hammer.svg?raw";
-import r3pLogoUrl from "./assets/splash/r3p-logo-transparent.svg";
+import sprocketHammerSvg from "./assets/sprocket-hammer.svg?raw";
+import r3pLogoUrl from "./assets/r3p-logo-transparent.svg";
 import { APP_VERSION } from "./version.js";
 
 // ── Runtime Tauri guard ────────────────────────────────────────────────────
@@ -153,7 +154,7 @@ const ForgeScene = memo(function ForgeScene() {
 });
 
 // ── Main component ────────────────────────────────────────────────────────
-function Splash({ onLoopRestart = null }) {
+function Splash({ onLoopRestart = null, appName = "", appOrg = "" }) {
   const reducedMotion                       = usePrefersReducedMotion();
   const [contentVisible, setContentVisible] = useState(false);
   const [fadingOut, setFadingOut]           = useState(false);
@@ -468,7 +469,7 @@ function Splash({ onLoopRestart = null }) {
         />
 
         <div className={`app-title${contentVisible ? " visible" : ""}`}>
-          Transmittal Builder
+          {appName}
         </div>
 
         <p className="subtitle">
@@ -509,16 +510,27 @@ function Splash({ onLoopRestart = null }) {
       </div>
 
       <div className={`version-meta${chromeVisible ? " visible" : ""}`}>
-        v{APP_VERSION}&nbsp;&middot;&nbsp;R3P Transmittal Builder
+        v{APP_VERSION}{appOrg || appName ? <>&nbsp;&middot;&nbsp;{[appOrg, appName].filter(Boolean).join(" ")}</> : null}
       </div>
     </div>
   );
 }
 
 // ── SplashApp: thin wrapper that owns the loop key ───────────────────────
+// Reads appName / appOrg from window.__SPLASH_CONFIG__ (set by the tool's
+// splash.html before mounting) or uses empty strings as safe defaults.
 function SplashApp() {
   const [loopKey, setLoopKey] = useState(0);
-  return <Splash key={loopKey} onLoopRestart={() => setLoopKey((k) => k + 1)} />;
+  const cfg =
+    typeof window !== "undefined" ? (window.__SPLASH_CONFIG__ ?? {}) : {};
+  return (
+    <Splash
+      key={loopKey}
+      onLoopRestart={() => setLoopKey((k) => k + 1)}
+      appName={cfg.appName ?? ""}
+      appOrg={cfg.appOrg ?? ""}
+    />
+  );
 }
 
 createRoot(document.getElementById("root")).render(<SplashApp />);
