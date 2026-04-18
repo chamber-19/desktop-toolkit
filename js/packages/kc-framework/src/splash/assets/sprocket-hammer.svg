@@ -1,0 +1,198 @@
+<svg id="sprocket-hammer" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg"
+  role="img" aria-label="Engineering sprocket with hammer — forging animation">
+
+  <defs>
+    <!-- Impact flash radial -->
+    <radialGradient id="impact-rg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#fff5e0" stop-opacity="0.9"/>
+      <stop offset="60%"  stop-color="#ffcc66" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#C8823A" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Sprocket body gradient -->
+    <radialGradient id="sprocket-rg" cx="200" cy="142" r="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#6e6c66"/>
+      <stop offset="25%"  stop-color="#55534e"/>
+      <stop offset="55%"  stop-color="#3e3c38"/>
+      <stop offset="85%"  stop-color="#2e2c28"/>
+      <stop offset="100%" stop-color="#1e1c18"/>
+    </radialGradient>
+
+    <linearGradient id="forge-light-lg" x1="200" y1="115" x2="200" y2="245" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#b0aea6" stop-opacity="0.28"/>
+      <stop offset="35%"  stop-color="#7a7870" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.18"/>
+    </linearGradient>
+
+    <radialGradient id="chamfer-rg" cx="200" cy="152" r="60" gradientUnits="userSpaceOnUse">
+      <stop offset="74%"  stop-color="#a0a09a" stop-opacity="0.0"/>
+      <stop offset="86%"  stop-color="#a0a09a" stop-opacity="0.40"/>
+      <stop offset="100%" stop-color="#a0a09a" stop-opacity="0.0"/>
+    </radialGradient>
+
+    <radialGradient id="hub-bore-rg" cx="200" cy="175" r="20" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#0c0a08"/>
+      <stop offset="55%"  stop-color="#181613"/>
+      <stop offset="100%" stop-color="#282622"/>
+    </radialGradient>
+
+    <radialGradient id="hub-face-rg" cx="200" cy="174" r="23" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#3a3835"/>
+      <stop offset="60%"  stop-color="#484644"/>
+      <stop offset="100%" stop-color="#5c5a58"/>
+    </radialGradient>
+
+    <linearGradient id="spoke-lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#5c5a58"/>
+      <stop offset="40%"  stop-color="#484644"/>
+      <stop offset="100%" stop-color="#2a2826"/>
+    </linearGradient>
+
+    <radialGradient id="tooth-tip-rg" cx="200" cy="128" r="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0%"   stop-color="#9a9890" stop-opacity="0.30"/>
+      <stop offset="50%"  stop-color="#9a9890" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#9a9890" stop-opacity="0.0"/>
+    </radialGradient>
+
+    <linearGradient id="steel-head-lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#c0beb8"/>
+      <stop offset="12%"  stop-color="#7a7870"/>
+      <stop offset="45%"  stop-color="#50504c"/>
+      <stop offset="80%"  stop-color="#3c3a36"/>
+      <stop offset="100%" stop-color="#545250"/>
+    </linearGradient>
+
+    <linearGradient id="steel-depth-lg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"   stop-color="#000000" stop-opacity="0.28"/>
+      <stop offset="25%"  stop-color="#000000" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
+    </linearGradient>
+
+    <linearGradient id="strike-face-lg" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0%"   stop-color="#8a8880"/>
+      <stop offset="40%"  stop-color="#5c5c58"/>
+      <stop offset="100%" stop-color="#3a3a36"/>
+    </linearGradient>
+
+    <linearGradient id="wood-grain-lg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#4a2e18"/>
+      <stop offset="20%"  stop-color="#7a4e2a"/>
+      <stop offset="50%"  stop-color="#8c6035"/>
+      <stop offset="78%"  stop-color="#7a4e2a"/>
+      <stop offset="100%" stop-color="#5a3820"/>
+    </linearGradient>
+
+    <radialGradient id="shadow-rg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%"   stop-color="#000000" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#000000" stop-opacity="0.0"/>
+    </radialGradient>
+  </defs>
+
+  <ellipse cx="200" cy="264" rx="72" ry="11" fill="url(#shadow-rg)"/>
+
+  <g id="sprocket">
+    <circle cx="200" cy="180" r="65" fill="url(#sprocket-rg)"/>
+    <circle cx="200" cy="180" r="65" fill="url(#forge-light-lg)"/>
+    <circle cx="200" cy="180" r="50" fill="#1e1c18"/>
+    <circle cx="200" cy="180" r="50" fill="none" stroke="#0a0a08" stroke-width="5" opacity="0.5"/>
+    <circle cx="200" cy="180" r="60" fill="none" stroke="url(#chamfer-rg)" stroke-width="5" opacity="1"/>
+    <circle cx="200" cy="180" r="65" fill="none" stroke="#787672" stroke-width="1.2" opacity="0.45"/>
+
+    <g fill="url(#sprocket-rg)">
+      <path d="M194.7,104.2 L205.3,104.2 L207.1,122.4 L192.9,122.4 Z"/>
+      <path d="M224.1,107.9 L233.9,112.0 L228.6,129.5 L215.5,124.1 Z"/>
+      <path d="M249.9,122.6 L257.4,130.1 L245.7,144.3 L235.7,134.3 Z"/>
+      <path d="M268.0,146.1 L272.1,155.9 L255.9,164.5 L250.5,151.4 Z"/>
+      <path d="M275.8,174.7 L275.8,185.3 L257.6,187.1 L257.6,172.9 Z"/>
+      <path d="M272.1,204.1 L268.0,213.9 L250.5,208.6 L255.9,195.5 Z"/>
+      <path d="M257.4,229.9 L249.9,237.4 L235.7,225.7 L245.7,215.7 Z"/>
+      <path d="M233.9,248.0 L224.1,252.1 L215.5,235.9 L228.6,230.5 Z"/>
+      <path d="M205.3,255.8 L194.7,255.8 L192.9,237.6 L207.1,237.6 Z"/>
+      <path d="M175.9,252.1 L166.1,248.0 L171.4,230.5 L184.5,235.9 Z"/>
+      <path d="M150.1,237.4 L142.6,229.9 L154.3,215.7 L164.3,225.7 Z"/>
+      <path d="M132.0,213.9 L127.9,204.1 L144.1,195.5 L149.5,208.6 Z"/>
+      <path d="M124.2,185.3 L124.2,174.7 L142.4,172.9 L142.4,187.1 Z"/>
+      <path d="M127.9,155.9 L132.0,146.1 L149.5,151.4 L144.1,164.5 Z"/>
+      <path d="M142.6,130.1 L150.1,122.6 L164.3,134.3 L154.3,144.3 Z"/>
+      <path d="M166.1,112.0 L175.9,107.9 L184.5,124.1 L171.4,129.5 Z"/>
+    </g>
+    <g fill="url(#tooth-tip-rg)">
+      <path d="M194.7,104.2 L205.3,104.2 L207.1,122.4 L192.9,122.4 Z"/>
+      <path d="M224.1,107.9 L233.9,112.0 L228.6,129.5 L215.5,124.1 Z"/>
+      <path d="M249.9,122.6 L257.4,130.1 L245.7,144.3 L235.7,134.3 Z"/>
+      <path d="M166.1,112.0 L175.9,107.9 L184.5,124.1 L171.4,129.5 Z"/>
+      <path d="M142.6,130.1 L150.1,122.6 L164.3,134.3 L154.3,144.3 Z"/>
+    </g>
+
+    <circle cx="200" cy="180" r="50" fill="#22201c"/>
+    <circle cx="200" cy="180" r="50" fill="none" stroke="#525050" stroke-width="1.5" opacity="0.5"/>
+    <circle cx="200" cy="180" r="49" fill="none" stroke="#101010" stroke-width="1" opacity="0.6"/>
+
+    <rect x="220" y="177" width="30" height="6" rx="3" fill="url(#spoke-lg)" stroke="#20201e" stroke-width="0.6"/>
+    <rect x="-14" y="-3" width="30" height="6" rx="3" fill="url(#spoke-lg)" stroke="#20201e" stroke-width="0.6" transform="translate(183,209.5) rotate(120)"/>
+    <rect x="-14" y="-3" width="30" height="6" rx="3" fill="url(#spoke-lg)" stroke="#20201e" stroke-width="0.6" transform="translate(183,150.5) rotate(240)"/>
+
+    <circle cx="200" cy="180" r="22" fill="url(#hub-face-rg)"/>
+    <circle cx="200" cy="180" r="22" fill="none" stroke="#6a6864" stroke-width="0.8" opacity="0.55"/>
+    <circle cx="200" cy="180" r="18" fill="url(#hub-bore-rg)"/>
+    <circle cx="200" cy="180" r="18" fill="none" stroke="#484644" stroke-width="1" opacity="0.45"/>
+    <circle cx="200" cy="180" r="5.5" fill="#080806"/>
+    <circle cx="198" cy="178" r="2.5" fill="#303030" opacity="0.6"/>
+
+    <circle class="tooth-glow-0"  cx="200.0" cy="104.2" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-1"  cx="229.1" cy="109.8" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-2"  cx="253.7" cy="126.3" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-3"  cx="270.2" cy="150.9" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-4"  cx="276.0" cy="180.0" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-5"  cx="270.2" cy="209.1" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-6"  cx="253.7" cy="233.7" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-7"  cx="229.1" cy="250.2" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-8"  cx="200.0" cy="256.0" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-9"  cx="170.9" cy="250.2" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-10" cx="146.3" cy="233.7" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-11" cx="129.8" cy="209.1" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-12" cx="124.0" cy="180.0" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-13" cx="129.8" cy="150.9" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-14" cx="146.3" cy="126.3" r="4" fill="#C8823A" opacity="0"/>
+    <circle class="tooth-glow-15" cx="170.9" cy="109.8" r="4" fill="#C8823A" opacity="0"/>
+  </g>
+
+  <g id="hammer">
+    <ellipse cx="14" cy="180" rx="6" ry="5.5" fill="url(#wood-grain-lg)"/>
+    <ellipse cx="14" cy="180" rx="6" ry="5.5" fill="none" stroke="#1e0e04" stroke-width="0.8" opacity="0.55"/>
+    <polygon points="8,178 100,174 100,186 8,182" fill="url(#wood-grain-lg)"/>
+    <polygon points="10,180 100,179.5 100,180.5 10,180.5" fill="#c89055" opacity="0.32"/>
+    <polygon points="8,178 100,174 100,175 8,179" fill="#1e0e04" opacity="0.30"/>
+    <polygon points="8,181 100,185 100,186 8,182" fill="#1e0e04" opacity="0.42"/>
+    <rect x="34" y="173.5" width="2.2" height="13" rx="1.0" fill="#2a1408" opacity="0.55"/>
+    <rect x="62" y="173.5" width="2.2" height="13" rx="1.0" fill="#2a1408" opacity="0.55"/>
+    <polygon points="96,168 96,192 82,186 82,174" fill="url(#steel-head-lg)"/>
+    <rect x="82" y="175" width="2" height="10" rx="0.5" fill="url(#strike-face-lg)" opacity="0.85"/>
+    <polygon points="82,184 86,185 86,186 82,186" fill="#000000" opacity="0.35"/>
+    <rect x="96" y="156" width="28" height="48" rx="3" fill="url(#steel-head-lg)"/>
+    <rect x="96" y="156" width="28" height="48" rx="3" fill="url(#steel-depth-lg)" opacity="0.55"/>
+    <line x1="96" y1="172" x2="124" y2="172" stroke="#1e1c18" stroke-width="0.7" opacity="0.55"/>
+    <line x1="96" y1="188" x2="124" y2="188" stroke="#1e1c18" stroke-width="0.7" opacity="0.55"/>
+    <rect x="98" y="176" width="6" height="8" rx="1" fill="#0a0806" opacity="0.6"/>
+    <rect x="99" y="177.5" width="4" height="5" rx="0.6" fill="url(#wood-grain-lg)" opacity="0.55"/>
+    <rect x="119" y="158" width="5" height="44" rx="1.5" fill="url(#strike-face-lg)"/>
+    <rect x="97" y="156.5" width="26" height="2" rx="1" fill="#e0deda" opacity="0.6"/>
+    <polygon points="99,158 120,158 120,162 99,166" fill="#d8d6d0" opacity="0.18"/>
+    <rect x="97" y="201" width="26" height="2.5" rx="1" fill="#1e1c18" opacity="0.45"/>
+    <rect x="96" y="156" width="28" height="48" rx="3" fill="none" stroke="#1a1816" stroke-width="0.6" opacity="0.55"/>
+  </g>
+
+  <circle id="impact-flash" cx="125" cy="180" r="28" fill="url(#impact-rg)" opacity="0"/>
+
+  <circle class="spark-1"  cx="125" cy="180" r="2.5" fill="#ffcc66" opacity="0"/>
+  <circle class="spark-2"  cx="125" cy="180" r="2.0" fill="#C8823A" opacity="0"/>
+  <circle class="spark-3"  cx="125" cy="180" r="3.0" fill="#ffcc66" opacity="0"/>
+  <circle class="spark-4"  cx="125" cy="180" r="1.8" fill="#fff5e0" opacity="0"/>
+  <circle class="spark-5"  cx="125" cy="180" r="2.2" fill="#C8823A" opacity="0"/>
+  <circle class="spark-6"  cx="125" cy="180" r="2.8" fill="#ffcc66" opacity="0"/>
+  <circle class="spark-7"  cx="125" cy="180" r="1.5" fill="#fff5e0" opacity="0"/>
+  <circle class="spark-8"  cx="125" cy="180" r="2.0" fill="#C8823A" opacity="0"/>
+  <circle class="spark-9"  cx="125" cy="180" r="2.5" fill="#ffcc66" opacity="0"/>
+  <circle class="spark-10" cx="125" cy="180" r="1.8" fill="#fff5e0" opacity="0"/>
+
+</svg>

@@ -1,0 +1,11 @@
+[project]
+name = "kc-framework"
+version = "1.0.0"
+description = "Shared Python utilities for ROOT3POWER desktop tools"
+requires-python = ">=3.10"
+authors = [{ name = "Koraji95-coder" }]
+license = { text = "MIT" }
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kc_framework*"]
