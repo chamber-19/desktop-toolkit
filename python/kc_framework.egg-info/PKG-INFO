@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: kc-framework
+Version: 1.0.0
+Summary: Shared Python utilities for ROOT3POWER desktop tools
+Author: Koraji95-coder
+License: MIT
+Requires-Python: >=3.10
