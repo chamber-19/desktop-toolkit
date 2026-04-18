@@ -1,0 +1,142 @@
+# release-tauri-sidecar-app.yml.template
+#
+# ── HOW TO USE ────────────────────────────────────────────────────────────
+# 1. Copy this file to your tool's .github/workflows/ directory and rename
+#    it to `release.yml` (or any name you prefer).
+# 2. Replace every ${PLACEHOLDER} token before committing:
+#
+#   ${TOOL_DISPLAY_NAME}      — human-readable name, e.g. "R3P Transmittal Builder"
+#   ${TOOL_VERSION_TAG_PREFIX} — tag prefix, e.g. "v" (keeps "v*" trigger as-is)
+#   ${BACKEND_DIR}            — path to your Python backend, e.g. "backend"
+#   ${BACKEND_SPEC}           — PyInstaller spec filename, e.g. "my_tool.spec"
+#   ${SIDECAR_NAME}           — dist folder / binary name, e.g. "my-tool-backend"
+#   ${FRONTEND_DIR}           — path to Vite+Tauri frontend, e.g. "frontend"
+#   ${INSTALLER_GLOB}         — glob for the built NSIS exe,
+#                               e.g. "frontend\src-tauri\target\release\bundle\nsis\*.exe"
+#
+# 3. Secrets required:
+#   GITHUB_TOKEN — automatic (read/write for releases)
+#
+# 4. Optional (code signing — see RELEASING.md):
+#   WINDOWS_CERT_BASE64       — base64-encoded .pfx certificate
+#   WINDOWS_CERT_PASSWORD     — certificate password
+#
+# Builds: NSIS installer + latest.json on every v* tag push.
+# ─────────────────────────────────────────────────────────────────────────
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "${TOOL_VERSION_TAG_PREFIX}*"
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # ── 2. Tool setup ───────────────────────────────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: ${FRONTEND_DIR}/package-lock.json
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Set up Rust (stable)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: x86_64-pc-windows-msvc
+
+      - name: Cache Rust build artefacts
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${FRONTEND_DIR}/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('${FRONTEND_DIR}/src-tauri/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      # ── 3. Python backend → PyInstaller sidecar ─────────────────────────
+      - name: Install backend dependencies
+        run: |
+          cd ${BACKEND_DIR}
+          pip install -r requirements.txt -r requirements-build.txt
+
+      - name: Build PyInstaller sidecar
+        run: |
+          cd ${BACKEND_DIR}
+          pyinstaller ${BACKEND_SPEC} --distpath dist-sidecar --workpath build-sidecar
+
+      - name: Copy sidecar to Tauri resources
+        run: |
+          $dest = "${FRONTEND_DIR}\src-tauri\binaries\${SIDECAR_NAME}"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item -Recurse -Force "${BACKEND_DIR}\dist-sidecar\${SIDECAR_NAME}\*" $dest
+          Write-Host "Sidecar copied to $dest"
+        shell: pwsh
+
+      # ── 4. Frontend build ────────────────────────────────────────────────
+      - name: Install frontend dependencies
+        run: |
+          cd ${FRONTEND_DIR}
+          npm ci
+
+      - name: Build Vite frontend
+        run: |
+          cd ${FRONTEND_DIR}
+          npm run build
+
+      # ── 5. Tauri build ───────────────────────────────────────────────────
+      - name: Build Tauri app (NSIS installer)
+        run: |
+          cd ${FRONTEND_DIR}
+          npx tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
+
+      # ── 6. Locate built artefacts ────────────────────────────────────────
+      - name: Locate NSIS installer
+        id: find_installer
+        run: |
+          $exe = Get-ChildItem -Recurse `
+            "${INSTALLER_GLOB}" |
+            Select-Object -First 1
+          if (-not $exe) { throw "NSIS installer not found!" }
+          echo "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+          echo "name=$($exe.Name)"     >> $env:GITHUB_OUTPUT
+          Write-Host "Installer: $($exe.FullName)"
+        shell: pwsh
+
+      # ── 7. Generate latest.json ──────────────────────────────────────────
+      - name: Generate latest.json
+        run: node build-scripts/generate-latest-json.mjs
+        env:
+          INSTALLER_NAME: ${{ steps.find_installer.outputs.name }}
+          TAG_NAME:       ${{ github.ref_name }}
+
+      # ── 8. Create GitHub Release ─────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name:     "${TOOL_DISPLAY_NAME} ${{ github.ref_name }}"
+          fail_on_unmatched_files: true
+          files: |
+            ${{ steps.find_installer.outputs.path }}
+            latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

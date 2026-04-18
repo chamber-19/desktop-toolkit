@@ -1,0 +1,46 @@
+# Cargo.toml.template — Tauri desktop app manifest template
+#
+# ── How to use ────────────────────────────────────────────────────────────
+# Copy this file to your tool's frontend/src-tauri/Cargo.toml and replace
+# every ${PLACEHOLDER} token before building:
+#
+#   ${TOOL_NAME}        — kebab-case package name, e.g. "my-tool"
+#   ${TOOL_VERSION}     — SemVer string, e.g. "1.0.0"
+#   ${TOOL_DESCRIPTION} — short human-readable description
+#   ${TOOL_AUTHORS}     — author string, e.g. "ROOT3POWER ENGINEERING"
+# ─────────────────────────────────────────────────────────────────────────
+
+[package]
+name = "${TOOL_NAME}"
+version = "${TOOL_VERSION}"
+description = "${TOOL_DESCRIPTION}"
+authors = ["${TOOL_AUTHORS}"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77.2"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix keeps the generated lib name distinct from the binary.
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-dialog = "2"
+semver = "1"
+
+[profile.release]
+# Shrink binary size for the distributed installer.
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true

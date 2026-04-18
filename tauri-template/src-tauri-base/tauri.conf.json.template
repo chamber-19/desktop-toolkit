@@ -1,0 +1,80 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+
+  "productName": "${TOOL_PRODUCT_NAME}",
+  "version": "${TOOL_VERSION}",
+  "identifier": "${TOOL_IDENTIFIER}",
+
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "${TOOL_PRODUCT_NAME}",
+        "width": 1280,
+        "height": 900,
+        "minWidth": 960,
+        "minHeight": 600,
+        "dragDropEnabled": false,
+        "visible": false
+      },
+      {
+        "label": "updater",
+        "title": "${TOOL_PRODUCT_NAME} — Update",
+        "url": "updater.html",
+        "width": 520,
+        "height": 320,
+        "decorations": false,
+        "resizable": false,
+        "center": true,
+        "visible": false
+      },
+      {
+        "label": "splash",
+        "title": "${TOOL_PRODUCT_NAME}",
+        "url": "splash.html",
+        "width": 680,
+        "height": 460,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "resizable": false,
+        "center": true,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "resources": [
+      "binaries/${TOOL_SIDECAR_NAME}/**/*"
+    ],
+    "windows": {
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "headerImage": "installer/nsis-header.bmp",
+        "sidebarImage": "installer/nsis-sidebar.bmp",
+        "installerHooks": "installer/hooks.nsh",
+        "displayLanguageSelector": false,
+        "languages": ["English"]
+      }
+    }
+  }
+}
