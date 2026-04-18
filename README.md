@@ -1,6 +1,6 @@
 # desktop-toolkit
 
-Shared scaffolding for ROOT3POWER desktop tools — extracted from
+Shared scaffolding for CHAMBER-19 desktop tools — extracted from
 [Transmittal-Builder v5.0.0](https://github.com/Koraji95-coder/Transmittal-Builder/releases/tag/v5.0.0).
 
 Contains UI primitives, Tauri sidecar boilerplate, NSIS installer assets, build scripts,
