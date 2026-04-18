@@ -182,13 +182,12 @@ jobs:
             -e 's|${FRONTEND_DIR}|frontend|g' \
             -e 's|${INSTALLER_GLOB}|frontend\\src-tauri\\target\\release\\bundle\\nsis\\*.exe|g' \
             .github/workflows/release-tauri-sidecar-app.yml.template > "$STAGE"
-          python -c "
-import yaml
-with open('$STAGE') as fh:
-    yaml.safe_load(fh)
-print('OK: workflow template parses as valid YAML')
-"
-
+          pip install --quiet pyyaml
+          STAGE_PATH="$STAGE" python - <<'PY'
+          import os, yaml
+          with open(os.environ["STAGE_PATH"]) as fh:
+              yaml.safe_load(fh)
+          print("OK: workflow template parses as valid YAML")
   install-script-syntax:
     runs-on: ubuntu-latest
     permissions:
