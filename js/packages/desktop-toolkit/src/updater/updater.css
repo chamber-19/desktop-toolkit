@@ -57,21 +57,17 @@
   z-index: 1;
 }
 
-/* ── R3P logo (official corporate mark — unchanged) ─────────────────────── */
+/* ── Anvil logo ──────────────────────────────────────────────────────────── */
 .updater-logo {
   width: 44px;
   height: 44px;
   border-radius: 10px;
   background: linear-gradient(135deg, #C8823A 0%, #a06830 100%);
-  color: #fff;
-  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
-  font-weight: 700;
-  font-size: 13px;
-  letter-spacing: -0.01em;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  padding: 7px; /* inner breathing room so the SVG doesn't touch the rounded edges */
 }
 
 /* ── Title block ─────────────────────────────────────────────────────────── */

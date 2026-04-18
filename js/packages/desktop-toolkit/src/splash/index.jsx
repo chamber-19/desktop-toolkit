@@ -28,7 +28,6 @@ import { useState, useEffect, useRef, useCallback, memo } from "react";
 import { createRoot } from "react-dom/client";
 import "./splash.css";
 import sprocketHammerSvg from "./assets/sprocket-hammer.svg?raw";
-import r3pLogoUrl from "./assets/r3p-logo-transparent.svg";
 import { APP_VERSION } from "../utils/version.js";
 
 // ── Runtime Tauri guard ────────────────────────────────────────────────────
@@ -460,13 +459,20 @@ function Splash({ onLoopRestart = null, appName = "", appOrg = "" }) {
 
       <div className={contentClass}>
 
-        <img
-          src={r3pLogoUrl}
-          className="r3p-header-logo"
+        <svg
+          className="anvil-header-logo"
+          viewBox="72 104 374 380"
+          xmlns="http://www.w3.org/2000/svg"
           role="img"
-          aria-label="R3P"
-          alt="R3P"
-        />
+          aria-label="Anvil mark"
+        >
+          <rect x="86" y="104" width="340" height="86" rx="10" fill="#C8823A"/>
+          <rect x="226" y="190" width="60" height="170" fill="#C8823A"/>
+          <path d="M 72,360 H 412 L 446,374 L 446,396 L 412,410 H 72 Z" fill="#C8823A"/>
+          <rect x="98" y="410" width="316" height="14" fill="#C8823A"/>
+          <path d="M 196,424 H 316 L 304,452 H 208 Z" fill="#C8823A"/>
+          <rect x="128" y="452" width="256" height="32" rx="4" fill="#C8823A"/>
+        </svg>
 
         <div className={`app-title${contentVisible ? " visible" : ""}`}>
           {appName}

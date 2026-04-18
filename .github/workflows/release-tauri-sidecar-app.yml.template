@@ -5,7 +5,7 @@
 #    it to `release.yml` (or any name you prefer).
 # 2. Replace every ${PLACEHOLDER} token before committing:
 #
-#   ${TOOL_DISPLAY_NAME}      — human-readable name, e.g. "R3P Transmittal Builder"
+#   ${TOOL_DISPLAY_NAME}      — human-readable name, e.g. "My Tool"
 #   ${TOOL_VERSION_TAG_PREFIX} — tag prefix, e.g. "v" (keeps "v*" trigger as-is)
 #   ${BACKEND_DIR}            — path to your Python backend, e.g. "backend"
 #   ${BACKEND_SPEC}           — PyInstaller spec filename, e.g. "my_tool.spec"

@@ -4,7 +4,7 @@
 
 `desktop-toolkit` is framework code.  Every change here is immediately consumed by
 **all downstream tools** (`Transmittal-Builder`, `Drawing-List-Manager`, and any
-future ROOT3POWER desktop tools) the next time they bump their pin.
+future chamber-19 desktop tools) the next time they bump their pin.
 
 **Think carefully before merging here.**
 

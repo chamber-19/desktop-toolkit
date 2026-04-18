@@ -13,7 +13,7 @@
 ;
 ; Tokens:
 ;   ${PRODUCT_NAME}  — human-readable product name shown in all captions,
-;                      e.g. "R3P Transmittal Builder"
+;                      e.g. "My Tool"
 ;
 ; ── SCOPE ─────────────────────────────────────────────────────────────────
 ; Wired in via tauri.conf.json -> bundle.windows.nsis.installerHooks.
