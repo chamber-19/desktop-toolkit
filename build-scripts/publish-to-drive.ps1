@@ -16,10 +16,10 @@
     The shared drive path where the tool is published.
 
 .PARAMETER Repo
-    GitHub repository in owner/name format, e.g. "Koraji95-coder/my-tool".
+    GitHub repository in owner/name format, e.g. "chamber-19/my-tool".
 
 .EXAMPLE
-    .\build-scripts\publish-to-drive.ps1 -Tag v1.0.0 -DrivePath "G:\Shared drives\R3P RESOURCES\APPS\My Tool" -Repo "Koraji95-coder/my-tool"
+    .\build-scripts\publish-to-drive.ps1 -Tag v1.0.0 -DrivePath "G:\Shared drives\R3P RESOURCES\APPS\My Tool" -Repo "chamber-19/my-tool"
 #>
 
 [CmdletBinding(SupportsShouldProcess)]

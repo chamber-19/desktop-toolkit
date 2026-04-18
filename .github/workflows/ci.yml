@@ -184,6 +184,76 @@ jobs:
           print("OK: workflow template parses as valid YAML")
           PY
 
+  fresh-consumer-install:
+    runs-on: ubuntu-latest
+    if: github.ref_type == 'tag' && startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@chamber-19"
+
+      - name: Wait for publish workflow to finish
+        # The publish workflow runs on the same tag push; this job races it.
+        # 90s is a comfortable buffer for a small package publish.
+        run: sleep 90
+
+      - name: Set up temp consumer project
+        run: |
+          TMPDIR=$(mktemp -d)
+          echo "CONSUMER_DIR=$TMPDIR" >> "$GITHUB_ENV"
+
+          cat > "$TMPDIR/package.json" <<'JSON'
+          {
+            "name": "consumer-smoke-test",
+            "version": "0.0.1",
+            "private": true,
+            "type": "module"
+          }
+          JSON
+
+          cat > "$TMPDIR/.npmrc" <<'NPMRC'
+          @chamber-19:registry=https://npm.pkg.github.com
+          //npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+          NPMRC
+
+      - name: Install @chamber-19/desktop-toolkit at the published tag version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd "$CONSUMER_DIR"
+          TAG_VERSION="${GITHUB_REF#refs/tags/v}"
+          npm install "@chamber-19/desktop-toolkit@$TAG_VERSION"
+
+      - name: Verify all declared exports resolve in the installed package
+        run: |
+          cd "$CONSUMER_DIR"
+          node --input-type=module <<'JS'
+          import { resolve } from "node:path";
+          import { existsSync, readFileSync } from "node:fs";
+
+          const pkgPath = resolve("node_modules/@chamber-19/desktop-toolkit/package.json");
+          const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+
+          let failed = false;
+          for (const [subpath, target] of Object.entries(pkg.exports || {})) {
+            const t = typeof target === "string" ? target : (target.default || target.import);
+            if (!t) continue;
+            const abs = resolve("node_modules/@chamber-19/desktop-toolkit", t);
+            if (!existsSync(abs)) {
+              console.error("MISSING:", subpath, "->", t);
+              failed = true;
+            } else {
+              console.log("OK:", subpath, "->", t);
+            }
+          }
+          if (failed) process.exit(1);
+          JS
+
   install-script-syntax:
     runs-on: ubuntu-latest
     permissions:
