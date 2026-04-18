@@ -1,6 +1,6 @@
 # @chamber-19/desktop-toolkit
 
-Shared JS/React primitives for ROOT3POWER desktop tools.
+Shared JS/React primitives for chamber-19 desktop tools.
 
 ## Exports
 

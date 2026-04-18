@@ -6,6 +6,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+- Removed all R3P / ROOT3POWER branding from framework source, examples, and assets in preparation for clean v1.1.0 launch under the `chamber-19` org.
+- Updater UI no longer renders hardcoded "R3P" text; now displays the same anvil/loader visual as the splash component.
+- NSIS installer artwork (`installer/nsis/nsis-header.svg`, `nsis-sidebar.svg`) reduced to the anvil mark only — no embedded product or vendor text.
+- Tauri template example identifiers and authors updated from `com.root3power.*` / `ROOT3POWER ENGINEERING` to neutral examples.
+
+### Removed
+- `js/packages/desktop-toolkit/src/splash/assets/r3p-logo.svg`
+- `js/packages/desktop-toolkit/src/splash/assets/r3p-logo-transparent.svg`
+
 ## [1.1.0] — 2026-04-18
 
 ### Changed

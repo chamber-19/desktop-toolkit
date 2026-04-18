@@ -7,7 +7,7 @@
 #   ${TOOL_NAME}        — kebab-case package name, e.g. "my-tool"
 #   ${TOOL_VERSION}     — SemVer string, e.g. "1.0.0"
 #   ${TOOL_DESCRIPTION} — short human-readable description
-#   ${TOOL_AUTHORS}     — author string, e.g. "ROOT3POWER ENGINEERING"
+#   ${TOOL_AUTHORS}     — author string, e.g. "Your Name"
 # ─────────────────────────────────────────────────────────────────────────
 
 [package]

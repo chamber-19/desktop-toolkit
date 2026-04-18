@@ -83,8 +83,8 @@
   transition: opacity 1s ease;
 }
 
-/* ── R3P header logo (img element — monogram SVG at 48×48) ─────────────── */
-.r3p-header-logo {
+/* ── Anvil header logo (inline SVG — anvil monogram at 48×48) ───────────── */
+.anvil-header-logo {
   width: 48px;
   height: 48px;
   display: block;

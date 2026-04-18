@@ -19,10 +19,10 @@ Parameterisable scaffolding for Tauri v2 + Python sidecar desktop apps.
 | `Cargo.toml.template` | `${TOOL_NAME}` | `my-tool` |
 | `Cargo.toml.template` | `${TOOL_VERSION}` | `1.0.0` |
 | `Cargo.toml.template` | `${TOOL_DESCRIPTION}` | `My Tool — Tauri desktop shell` |
-| `Cargo.toml.template` | `${TOOL_AUTHORS}` | `ROOT3POWER ENGINEERING` |
-| `tauri.conf.json.template` | `${TOOL_PRODUCT_NAME}` | `R3P My Tool` |
+| `Cargo.toml.template` | `${TOOL_AUTHORS}` | `Your Name` |
+| `tauri.conf.json.template` | `${TOOL_PRODUCT_NAME}` | `My Tool` |
 | `tauri.conf.json.template` | `${TOOL_VERSION}` | `1.0.0` |
-| `tauri.conf.json.template` | `${TOOL_IDENTIFIER}` | `com.root3power.my-tool` |
+| `tauri.conf.json.template` | `${TOOL_IDENTIFIER}` | `com.chamber-19.my-tool` |
 | `tauri.conf.json.template` | `${TOOL_SIDECAR_NAME}` | `my-tool-backend` |
 
 See the root [README.md](../README.md) for the full documentation.

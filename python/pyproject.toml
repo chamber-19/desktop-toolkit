@@ -1,7 +1,7 @@
 [project]
 name = "chamber19-desktop-toolkit"
 version = "1.1.0"
-description = "Shared Python utilities for ROOT3POWER desktop tools"
+description = "Shared Python utilities for chamber-19 desktop tools"
 requires-python = ">=3.10"
 authors = [{ name = "Koraji" }]
 license = { text = "MIT" }
