@@ -138,7 +138,7 @@ jobs:
               for key in "${!SUBS[@]}"; do
                 sed -i "s|\${${key}}|${SUBS[$key]}|g" "$out"
               done
-              if grep -E '\$\{[A-Z_]+\}' "$out"; then
+              if grep -vE '^\s*(#|//)' "$out" | grep -E '\$\{[A-Z_]+\}'; then
                 echo "ERROR: unsubstituted placeholder in $out"
                 exit 1
               fi
