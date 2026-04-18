@@ -6,6 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-04-18
+
+### Fixed
+- `python/pyproject.toml` now declares the runtime dependency `pypdf>=4,<5` so that `pip install kc-framework` actually allows `import kc_framework.utils.pdf_merge` to succeed.
+- `js/packages/kc-framework/src/splash/index.jsx` import of `version.js` was rewritten to the correct relative path `../utils/version.js`.
+- Added a root `package.json` declaring `js/packages/*` as npm workspaces so that consumers can install the JS package via `git+https://...#v1.0.1&path:js/packages/kc-framework` without npm silently mangling the install. Removes the need for downstream consumers to vendor the package.
+
 ## [1.0.0] - 2025-01-01
 
 ### Added
