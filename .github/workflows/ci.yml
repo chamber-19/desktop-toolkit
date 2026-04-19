@@ -125,9 +125,9 @@ jobs:
             ["TOOL_NAME"]="ci-smoke-tool"
             ["TOOL_VERSION"]="0.0.0"
             ["TOOL_DESCRIPTION"]="CI smoke test tool"
-            ["TOOL_AUTHORS"]="kc-framework CI"
+            ["TOOL_AUTHORS"]="chamber-19 CI"
             ["TOOL_PRODUCT_NAME"]="CI Smoke Tool"
-            ["TOOL_IDENTIFIER"]="dev.kc-framework.ci-smoke"
+            ["TOOL_IDENTIFIER"]="dev.chamber-19.ci-smoke"
             ["TOOL_SIDECAR_NAME"]="ci-smoke-backend"
           )
 
@@ -147,6 +147,12 @@ jobs:
           done
 
           ls -la
+
+          # Tauri validates externalBin paths at cargo check time (file existence only).
+          # Create a zero-byte stub so the glob resolves on Linux x86_64.
+          mkdir -p binaries
+          touch binaries/ci-smoke-backend-x86_64-unknown-linux-gnu
+
           cargo check
           echo "TAURI_STAGE=$STAGE/src-tauri" >> "$GITHUB_ENV"
       - name: Cargo clippy on rendered template
