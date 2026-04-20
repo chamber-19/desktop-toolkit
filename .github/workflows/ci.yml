@@ -156,6 +156,32 @@ jobs:
           touch binaries/ci-smoke-backend-x86_64-unknown-linux-gnu
           touch binaries/ci-smoke-backend/.gitkeep
 
+          # ── Stub icon and installer assets so cargo check passes ────────
+          # Tauri validates `bundle.icon` and `bundle.windows.nsis.*` paths
+          # at cargo check time (file existence only). Create the smallest
+          # possible valid files for each referenced path.
+          mkdir -p icons installer
+
+          # 1×1 transparent PNG (67 bytes), base64-encoded.
+          echo 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=' \
+            | base64 -d > icons/32x32.png
+          cp icons/32x32.png icons/128x128.png
+          cp icons/32x32.png 'icons/128x128@2x.png'
+
+          # Minimal valid .ico file (PNG payload wrapped in ICO header).
+          # tauri-build validates ICO format strictly, so use the bundled
+          # `image` crate's behavior: a 1×1 BMP-format ICO is the smallest.
+          # ICO header (6 bytes) + ICO directory entry (16 bytes) + 1×1 BMP
+          # (40 bytes BITMAPINFOHEADER + 4 bytes XOR pixel data + 4 bytes
+          # AND mask) = 70 bytes total.
+          printf '\x00\x00\x01\x00\x01\x00\x01\x01\x00\x00\x01\x00\x20\x00\x30\x00\x00\x00\x16\x00\x00\x00\x28\x00\x00\x00\x01\x00\x00\x00\x02\x00\x00\x00\x01\x00\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' > icons/icon.ico
+
+          # Installer asset stubs (NSIS-only; not validated by cargo check
+          # but referenced by tauri.conf.json so paths must exist).
+          touch installer/nsis-header.bmp
+          touch installer/nsis-sidebar.bmp
+          touch installer/hooks.nsh
+
           cargo check
           echo "TAURI_STAGE=$STAGE/src-tauri" >> "$GITHUB_ENV"
       - name: Cargo clippy on rendered template
