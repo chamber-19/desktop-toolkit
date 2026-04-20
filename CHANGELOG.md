@@ -6,6 +6,25 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.3] — 2026-04-20
+
+### Fixed
+- **`tauri-template-render` CI now passes through `tauri::generate_context!`.**
+  The 1×1 PNG stubs added in v2.2.1 were RGB (3-channel), but Tauri's
+  icon validator requires RGBA (4-channel) and proc-macro-panics at
+  compile time otherwise:
+  > `icon /tmp/.../icons/32x32.png is not RGBA`
+  CI now generates icon stubs via ImageMagick with the `PNG32:` prefix
+  (which forces RGBA output), and asserts the channel count via
+  `identify` before `cargo check` runs.
+
+### Notes
+- v2.2.1 and v2.2.2 are both phantom versions: merged to main but never
+  tagged because each one revealed a different downstream CI failure.
+  v2.2.3 is the first release after v2.2.0 that should ship cleanly
+  through CI.
+- No public API changes. v2.2.0 consumers (TB v6.2.1) require no action.
+
 ## [2.2.2] — 2026-04-20
 
 ### Fixed
