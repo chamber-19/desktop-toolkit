@@ -1,12 +1,12 @@
 [project]
 name = "chamber19-desktop-toolkit"
-version = "2.1.2"
+version = "2.1.3"
 description = "Shared Python utilities for chamber-19 desktop tools"
 requires-python = ">=3.10"
 authors = [{ name = "Koraji" }]
 license = { text = "MIT" }
 dependencies = [
-    "pypdf>=4,<5",
+    "pypdf>=6.10.2,<7",
 ]
 
 [tool.setuptools.packages.find]
