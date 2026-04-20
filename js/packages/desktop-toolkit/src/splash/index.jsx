@@ -153,7 +153,7 @@ const ForgeScene = memo(function ForgeScene() {
 });
 
 // ── Main component ────────────────────────────────────────────────────────
-function Splash({ onLoopRestart = null, appName = "", appOrg = "" }) {
+export function Splash({ onLoopRestart = null, appName = "", appOrg = "" }) {
   const reducedMotion                       = usePrefersReducedMotion();
   const [contentVisible, setContentVisible] = useState(false);
   const [fadingOut, setFadingOut]           = useState(false);
@@ -525,7 +525,7 @@ function Splash({ onLoopRestart = null, appName = "", appOrg = "" }) {
 // ── SplashApp: thin wrapper that owns the loop key ───────────────────────
 // Reads appName / appOrg from window.__SPLASH_CONFIG__ (set by the tool's
 // splash.html before mounting) or uses empty strings as safe defaults.
-function SplashApp() {
+export function SplashApp() {
   const [loopKey, setLoopKey] = useState(0);
   const cfg =
     typeof window !== "undefined" ? (window.__SPLASH_CONFIG__ ?? {}) : {};
@@ -539,4 +539,13 @@ function SplashApp() {
   );
 }
 
-createRoot(document.getElementById("root")).render(<SplashApp />);
+export function mountSplash(rootElement = document.getElementById("root")) {
+  if (!rootElement) {
+    throw new Error("[desktop-toolkit/splash] mount target element not found");
+  }
+  createRoot(rootElement).render(<SplashApp />);
+}
+
+// Backward-compatible auto-mount: importing this module for side effect
+// still mounts <SplashApp /> into #root, exactly as in v2.1.x.
+mountSplash();
