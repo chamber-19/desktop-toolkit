@@ -1,0 +1,104 @@
+/* UpdateModal.css — Force-update confirmation modal styles */
+
+.update-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 8, 6, 0.90);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+}
+
+.update-modal {
+  background: #1a1410;
+  border: 1px solid #4a3a28;
+  border-radius: 8px;
+  padding: 2rem;
+  width: min(420px, 90vw);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+  color: #e8d5b8;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+
+.update-modal-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.update-modal-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  color: #c4914a;
+}
+
+.update-modal-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #f0dcc0;
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* ── Body ────────────────────────────────────────────────────────────── */
+
+.update-modal-body {
+  margin-bottom: 1.5rem;
+}
+
+.update-modal-version {
+  font-size: 0.95rem;
+  color: #c4914a;
+  margin: 0 0 0.5rem;
+}
+
+.update-modal-notes {
+  font-size: 0.875rem;
+  color: #a89070;
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.update-modal-message {
+  font-size: 0.875rem;
+  color: #a89070;
+  margin: 0;
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────── */
+
+.update-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.update-modal-btn {
+  background: #c4914a;
+  color: #1a1410;
+  border: none;
+  border-radius: 4px;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  min-width: 8rem;
+}
+
+.update-modal-btn:hover {
+  background: #d9a45a;
+}
+
+.update-modal-btn:active {
+  background: #b07a3a;
+}
+
+.update-modal-btn:focus-visible {
+  outline: 2px solid #c4914a;
+  outline-offset: 2px;
+}

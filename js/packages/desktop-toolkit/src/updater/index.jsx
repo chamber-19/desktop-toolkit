@@ -1,55 +1,100 @@
 /**
- * updater/index.jsx — Force-update progress window.
+ * updater/index.jsx — Force-update window.
  *
- * Shown by Rust when an update is available on the shared drive.
- * Listens for `update_info` (once) and `update_progress` events emitted
- * by the Rust updater module and displays a branded progress bar while the
- * installer is copied from the shared drive to %TEMP%.
+ * This window serves two sequential phases:
  *
- * The user cannot cancel — this is intentional per the product spec.
+ *   1. **Confirmation** — `UpdateModal` is shown when `update_info` arrives
+ *      from Rust.  The user must click **Install Now** to proceed.
+ *
+ *   2. **Progress** — After confirmation the `start_update` Rust command is
+ *      invoked.  It copies the installer from the shared drive to `%TEMP%`
+ *      and emits `update_progress` (percent) and `update_status` (text)
+ *      events that drive the branded progress bar below.
+ *
+ * The user cannot cancel at either phase — this is intentional per the
+ * mandatory-update product spec.
  */
 
 import { StrictMode, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { listen, emit } from "@tauri-apps/api/event";
+import { invoke } from "@tauri-apps/api/core";
+import { UpdateModal } from "../components/UpdateModal/UpdateModal";
 import "./updater.css";
 
-// ── Updater component ────────────────────────────────────────────────────
+// ── Initial status shown while start_update runs ─────────────────────────
+const STATUS_CLOSING: &str = "Closing application…";
 function Updater() {
-  const [version, setVersion]   = useState("");
-  const [notes, setNotes]       = useState(null);
-  const [percent, setPercent]   = useState(0);
-  const [status, setStatus]     = useState("Preparing update…");
+  // "waiting" → initial state before update_info arrives
+  // "modal"   → UpdateModal is visible, user must confirm
+  // "progress"→ start_update has been invoked, progress bar is active
+  const [phase, setPhase]     = useState("waiting");
+  const [version, setVersion] = useState("");
+  const [notes, setNotes]     = useState(null);
+  const [percent, setPercent] = useState(0);
+  const [status, setStatus]   = useState(STATUS_CLOSING);
 
   useEffect(() => {
-    // Receive version / notes from Rust before copy starts.
+    // Receive version / notes → switch to confirmation modal.
     const unlisten1 = listen("update_info", (ev) => {
       setVersion(ev.payload?.version ?? "");
       setNotes(ev.payload?.notes ?? null);
-      setStatus(`Downloading update to v${ev.payload?.version ?? "…"}…`);
+      setPhase("modal");
     });
 
-    // Receive copy progress events.
+    // Receive copy-progress events emitted by start_update.
     const unlisten2 = listen("update_progress", (ev) => {
       const p = ev.payload?.percent ?? 0;
       setPercent(p);
-      if (p >= 100) {
-        setStatus("Launching installer…");
-      }
     });
 
-    // Signal Rust that both listeners are registered and it is safe to
-    // start emitting update_info / update_progress events.
-    Promise.all([unlisten1, unlisten2]).then(() => {
+    // Receive human-readable status text emitted by start_update.
+    const unlisten3 = listen("update_status", (ev) => {
+      setStatus(ev.payload?.message ?? "");
+    });
+
+    // Signal Rust that all listeners are registered; safe to emit update_info.
+    Promise.all([unlisten1, unlisten2, unlisten3]).then(() => {
       emit("updater_ready");
     });
 
     return () => {
       unlisten1.then((f) => f());
       unlisten2.then((f) => f());
+      unlisten3.then((f) => f());
     };
   }, []);
 
+  // ── Install Now handler ───────────────────────────────────────────────
+  const handleInstall = () => {
+    setPhase("progress");
+    setStatus(STATUS_CLOSING);
+    invoke("start_update").catch((e) => {
+      console.error("[updater] start_update failed:", e);
+    });
+  };
+
+  // ── Phase: waiting for update_info ───────────────────────────────────
+  if (phase === "waiting") {
+    return (
+      <div className="updater-root">
+        <div className="updater-status">Checking for updates…</div>
+      </div>
+    );
+  }
+
+  // ── Phase: confirmation modal ─────────────────────────────────────────
+  if (phase === "modal") {
+    return (
+      <UpdateModal
+        version={version}
+        notes={notes}
+        onInstall={handleInstall}
+      />
+    );
+  }
+
+  // ── Phase: progress view ──────────────────────────────────────────────
   return (
     <div className="updater-root">
       {/* Anvil mark */}
