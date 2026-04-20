@@ -6,6 +6,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-04-20
+
+### Added
+- **Named exports for splash and updater entries.** Consumers can now do
+  `import { Splash, SplashApp, mountSplash } from "@chamber-19/desktop-toolkit/splash"`
+  and `import { Updater, mountUpdater } from "@chamber-19/desktop-toolkit/updater"`
+  for full control over mount target and StrictMode wrapping.
+- **`mountSplash(rootElement?)` and `mountUpdater(rootElement?)`** helper
+  functions for imperative mounting against a custom root element.
+- **`lockfile-integrity-guard` CI job** as a documented pattern for
+  detecting corrupted `package-lock.json` integrity hashes (the failure mode
+  that bit consumers twice during the v2.1.x rollout).
+
+### Changed
+- The auto-mount block at the bottom of `splash/index.jsx` and
+  `updater/index.jsx` now calls the new `mountSplash()` / `mountUpdater()`
+  helpers internally. Behavior is unchanged for consumers using the
+  side-effect import pattern (`import "@chamber-19/desktop-toolkit/splash"`).
+
+### Fixed
+- **`tauri-template-render` CI job** now creates BOTH the `externalBin`
+  binary stub AND a `binaries/<sidecar>/` directory with a `.gitkeep` file,
+  satisfying the `bundle.resources` directory glob in the Tauri template's
+  `tauri.conf.json`. This was the root cause of every failed
+  `tauri-template-render` run since the v2.1.0 consolidation.
+
+### Notes
+- No breaking changes. v2.1.x consumers continue to work unchanged.
+- The pypdf>=6.10.2,<7 constraint from v2.1.3 is preserved.
+
 ## [2.1.3] — 2026-04-20
 
 ### Security

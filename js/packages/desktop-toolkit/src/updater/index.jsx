@@ -24,7 +24,7 @@ import "./updater.css";
 
 // ── Initial status shown while start_update runs ─────────────────────────
 const STATUS_CLOSING = "Closing application…";
-function Updater() {
+export function Updater() {
   // "waiting" → initial state before update_info arrives
   // "modal"   → UpdateModal is visible, user must confirm
   // "progress"→ start_update has been invoked, progress bar is active
@@ -143,8 +143,16 @@ function Updater() {
   );
 }
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <Updater />
-  </StrictMode>
-);
+export function mountUpdater(rootElement = document.getElementById("root")) {
+  if (!rootElement) {
+    throw new Error("[desktop-toolkit/updater] mount target element not found");
+  }
+  createRoot(rootElement).render(
+    <StrictMode>
+      <Updater />
+    </StrictMode>
+  );
+}
+
+// Backward-compatible auto-mount.
+mountUpdater();

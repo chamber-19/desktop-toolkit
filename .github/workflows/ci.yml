@@ -148,10 +148,13 @@ jobs:
 
           ls -la
 
-          # Tauri validates externalBin paths at cargo check time (file existence only).
-          # Create a zero-byte stub so the glob resolves on Linux x86_64.
-          mkdir -p binaries
+          # Tauri validates externalBin paths AND bundle.resources globs at cargo
+          # check time (file existence only). Create stubs for both:
+          #   1. externalBin: binaries/ci-smoke-backend-<triple>
+          #   2. bundle.resources: binaries/ci-smoke-backend/**/* (directory glob)
+          mkdir -p binaries/ci-smoke-backend
           touch binaries/ci-smoke-backend-x86_64-unknown-linux-gnu
+          touch binaries/ci-smoke-backend/.gitkeep
 
           cargo check
           echo "TAURI_STAGE=$STAGE/src-tauri" >> "$GITHUB_ENV"
@@ -285,3 +288,26 @@ jobs:
               if (\$errors.Count -gt 0) { \$errors; exit 1 } else { Write-Host 'OK: $f' }
             "
           done
+
+  lockfile-integrity-guard:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Verify root JS package-lock matches package.json
+        run: |
+          # The DTK repo doesn't have a top-level lockfile we publish, but if
+          # one exists we verify it. This job exists primarily as a template
+          # consumer projects can mirror.
+          if [ -f js/packages/desktop-toolkit/package-lock.json ]; then
+            cd js/packages/desktop-toolkit
+            # `npm ci --dry-run` succeeds only if every integrity hash in
+            # the lockfile matches what the registry actually serves.
+            npm ci --dry-run --ignore-scripts
+          else
+            echo "No lockfile present in js/packages/desktop-toolkit; skipping."
+          fi
