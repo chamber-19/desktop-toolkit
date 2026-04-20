@@ -1,0 +1,25 @@
+# Cargo workspace for desktop-toolkit framework crates.
+#
+# Members:
+#   crates/desktop-toolkit          — publishable library crate (v2.1.0+)
+#   crates/desktop-toolkit-updater  — updater shim binary
+#
+# Usage:
+#   cargo check                        — check all crates
+#   cargo check -p desktop-toolkit     — check library only
+#   cargo check -p desktop-toolkit-updater — check shim only
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/desktop-toolkit",
+    "crates/desktop-toolkit-updater",
+]
+
+[profile.release]
+# Shrink binary size for the updater shim and any published artifacts.
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
