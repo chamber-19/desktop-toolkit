@@ -6,6 +6,29 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.1] — 2026-04-20
+
+### Fixed
+- **`tauri-template-render` CI job** now passes end-to-end. Two
+  pre-existing scaffolding gaps were exposed once the v2.2.0
+  `bundle.resources` glob fix let CI progress further into `cargo check`:
+  - Added `semver = "1"` to `tauri-template/src-tauri-base/Cargo.toml.template`
+    `[dependencies]` (template's `src/updater.rs` already imports it via
+    `use semver::Version;` on line 25).
+  - CI now generates 1×1 stub `.png` and `.ico` files in the staging
+    `icons/` directory and touches the `installer/nsis-*.bmp` and
+    `installer/hooks.nsh` files so `cargo check` validates all paths
+    declared in `tauri.conf.json.template`.
+
+### Changed
+- Bumped the template's self-reference `desktop-toolkit` tag from
+  `v2.1.0` to `v2.2.1` so newly-scaffolded consumers pin to the current
+  framework release.
+
+### Notes
+- No public API changes. v2.2.0 consumers (including TB v6.2.1) require
+  no action — this is a template/CI-only hotfix.
+
 ## [2.2.0] — 2026-04-20
 
 ### Added
