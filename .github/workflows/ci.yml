@@ -148,6 +148,21 @@ jobs:
 
           ls -la
 
+          # ── Override the template's desktop-toolkit git dep ───────────────
+          # The template pins `desktop-toolkit = { git = "...", tag = "vX.Y.Z" }`
+          # for downstream consumers, but in CI we want to validate the
+          # CURRENT in-repo code, not a published tag (which may not exist
+          # yet during the PR that publishes it — chicken-and-egg).
+          #
+          # Replace the entire `desktop-toolkit = { ... }` line with a path
+          # dependency pointing at the in-repo crate. The GITHUB_WORKSPACE
+          # env var holds the absolute path to the checked-out repo root.
+          sed -i \
+            "s|^desktop-toolkit = .*|desktop-toolkit = { path = \"${GITHUB_WORKSPACE}/crates/desktop-toolkit\" }|" \
+            Cargo.toml
+          echo "── Rendered Cargo.toml after path override ──"
+          grep "^desktop-toolkit" Cargo.toml
+
           # Tauri validates externalBin paths AND bundle.resources globs at cargo
           # check time (file existence only). Create stubs for both:
           #   1. externalBin: binaries/ci-smoke-backend-<triple>

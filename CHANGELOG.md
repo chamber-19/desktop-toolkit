@@ -6,6 +6,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.2] — 2026-04-20
+
+### Fixed
+- **Chicken-and-egg bug in `tauri-template-render` CI** that blocked
+  v2.2.1 from being tagged. The template's `Cargo.toml.template` pinned
+  `desktop-toolkit = { git = "...", tag = "v2.2.1" }` — a tag that did
+  not exist when CI ran (because tagging happens AFTER CI passes on main).
+  CI now sed-replaces the template's `desktop-toolkit` dep to a `path = ...`
+  dependency pointing at the in-repo crate, so the smoke-test build
+  validates the CURRENT code regardless of which tag the template pins.
+- **Reverted template's `Cargo.toml.template` self-reference tag** from
+  `v2.2.1` (never published) back to `v2.2.0` (published and live on
+  Packages). New convention: the template always pins to the most recent
+  PUBLISHED tag, one release behind `main`. Documented inline.
+
+### Notes
+- v2.2.1 is a phantom version: merged to main but never tagged. v2.2.2
+  is the first release after v2.2.0 that ships cleanly through CI.
+- No public API changes. v2.2.0 consumers (TB v6.2.1) require no action.
+
 ## [2.2.1] — 2026-04-20
 
 ### Fixed
