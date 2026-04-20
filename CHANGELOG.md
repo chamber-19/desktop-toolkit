@@ -6,6 +6,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.1.3] — 2026-04-20
+
+### Security
+- Bumped `pypdf` from `>=4,<5` to `>=6.10.2,<7` to remediate ~20 open
+  CVE/advisory entries affecting consumers, including:
+  - Multiple FlateDecode/LZWDecode/ASCIIHexDecode/RunLengthDecode
+    RAM-exhaustion vulnerabilities
+  - Multiple infinite-loop vulnerabilities in TreeObject, outlines,
+    DCT inline images, circular /Prev xrefs, and DictionaryObject recovery
+  - Long-runtime issues in malformed startxref, wrong /Size, /ToUnicode
+    streams, and incremental mode
+  - XMP metadata entity declarations RAM exhaustion
+  - Stream /Length RAM exhaustion (CVE-2026-31826)
+- No source-code changes required; pypdf 4 → 6 APIs used by
+  `chamber19_desktop_toolkit.utils.pdf_merge` are stable.
+
 ## [2.1.0] — 2026-04-20
 
 ### Added

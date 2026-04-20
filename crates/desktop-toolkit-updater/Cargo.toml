@@ -1,6 +1,6 @@
 [package]
 name = "desktop-toolkit-updater"
-version = "2.1.2"
+version = "2.1.3"
 description = "desktop-toolkit updater shim — separate process that handles silent-install upgrades"
 authors = ["Koraji"]
 license = "MIT"
