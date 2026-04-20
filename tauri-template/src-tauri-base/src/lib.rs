@@ -701,8 +701,10 @@ fn start_update(app: tauri::AppHandle, state: tauri::State<UpdateState>) {
                 .status();
         }
 
-        // Brief pause so Windows releases file handles before the installer
-        // runs against the sidecar directory.
+        // Brief pause so Windows releases file handles on the sidecar directory
+        // before the NSIS installer tries to overwrite or delete those files.
+        // One second is the practical minimum observed to avoid "file in use"
+        // errors when NSIS runs immediately after the taskkill.
         thread::sleep(Duration::from_secs(1));
 
         // ── 4. Emit status: installing ────────────────────────────────────

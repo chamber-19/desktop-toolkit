@@ -74,14 +74,21 @@ UninstallCaption "${PRODUCT_NAME} — Uninstaller"
 !define MUI_UNTEXT_CONFIRM_TITLE                 "Remove ${PRODUCT_NAME}"
 !define MUI_UNTEXT_CONFIRM_SUBTITLE              "Confirm that you want to uninstall."
 
+; ── Shared taskkill helper ────────────────────────────────────────────────
+; Terminates the app and its sidecar so NSIS can overwrite or delete the
+; binaries without hitting "file in use" errors.
+!macro _KillAppProcesses
+  nsExec::Exec 'taskkill /F /IM "${PRODUCT_NAME}.exe" /T'
+  nsExec::Exec 'taskkill /F /IM "${TOOL_SIDECAR_NAME}.exe" /T'
+  Sleep 2000
+!macroend
+
 ; ── Pre-install hook: terminate running processes ─────────────────────────
 ; Kills the app and sidecar before the installer overwrites the binaries.
 ; ${PRODUCT_NAME} is injected by Tauri's installer template.
 ; Replace ${TOOL_SIDECAR_NAME} with the actual sidecar binary name.
 !macro NSIS_HOOK_PREINSTALL
-  nsExec::Exec 'taskkill /F /IM "${PRODUCT_NAME}.exe" /T'
-  nsExec::Exec 'taskkill /F /IM "${TOOL_SIDECAR_NAME}.exe" /T'
-  Sleep 2000
+  !insertmacro _KillAppProcesses
 !macroend
 
 !macro NSIS_HOOK_POSTINSTALL
@@ -90,9 +97,7 @@ UninstallCaption "${PRODUCT_NAME} — Uninstaller"
 ; ── Pre-uninstall hook: terminate running processes ───────────────────────
 ; Kills the app and sidecar before the uninstaller removes the binaries.
 !macro NSIS_HOOK_PREUNINSTALL
-  nsExec::Exec 'taskkill /F /IM "${PRODUCT_NAME}.exe" /T'
-  nsExec::Exec 'taskkill /F /IM "${TOOL_SIDECAR_NAME}.exe" /T'
-  Sleep 2000
+  !insertmacro _KillAppProcesses
 !macroend
 
 !macro NSIS_HOOK_POSTUNINSTALL

@@ -22,7 +22,8 @@ import { invoke } from "@tauri-apps/api/core";
 import { UpdateModal } from "../components/UpdateModal/UpdateModal";
 import "./updater.css";
 
-// ── Updater component ────────────────────────────────────────────────────
+// ── Initial status shown while start_update runs ─────────────────────────
+const STATUS_CLOSING: &str = "Closing application…";
 function Updater() {
   // "waiting" → initial state before update_info arrives
   // "modal"   → UpdateModal is visible, user must confirm
@@ -31,7 +32,7 @@ function Updater() {
   const [version, setVersion] = useState("");
   const [notes, setNotes]     = useState(null);
   const [percent, setPercent] = useState(0);
-  const [status, setStatus]   = useState("Closing application…");
+  const [status, setStatus]   = useState(STATUS_CLOSING);
 
   useEffect(() => {
     // Receive version / notes → switch to confirmation modal.
@@ -67,7 +68,7 @@ function Updater() {
   // ── Install Now handler ───────────────────────────────────────────────
   const handleInstall = () => {
     setPhase("progress");
-    setStatus("Closing application…");
+    setStatus(STATUS_CLOSING);
     invoke("start_update").catch((e) => {
       console.error("[updater] start_update failed:", e);
     });
