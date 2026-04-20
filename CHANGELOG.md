@@ -6,6 +6,41 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.4] — 2026-04-20
+
+### Fixed
+- **NSIS installer shows literal `${PRODUCT_NAME}` in wizard UI.** Caught
+  during Transmittal Builder v6.2.1 E2E testing: the installer's title
+  bar read `${PRODUCT_NAME} — Setup` and the welcome page read
+  "Welcome to the ${PRODUCT_NAME} Setup" because consumers are expected
+  to sed-substitute the placeholder before `tauri build` — and TB (and
+  likely other future consumers) forgot.
+
+  **Permanent fix:** `installer/nsis/hooks.nsh` now uses only macros
+  that Tauri injects automatically into the NSIS context:
+  - `${PRODUCT_NAME}` → `${PRODUCTNAME}` (Tauri-provided)
+  - `${TOOL_SIDECAR_NAME}.exe` taskkill entry removed — child sidecars
+    are reaped automatically by the OS when the parent Tauri process
+    exits. Consumers that spawn detached sidecars should override the
+    file locally (documented inline).
+  - Main-exe taskkill switched from `${PRODUCT_NAME}.exe` to
+    `${MAINBINARYNAME}.exe` (Tauri-provided).
+
+  No consumer substitution is required. Point `installerHooks` at the
+  file and it Just Works.
+
+### Migration
+- Consumer tools (TB v6.2.x, future Drawing List Manager, etc.) should
+  bump their DTK pin to v2.2.4 and rebuild their installer. No code or
+  config changes required on the consumer side — the hooks file is now
+  fully self-contained.
+- Consumers that were manually sed-substituting `${PRODUCT_NAME}` in
+  their CI should DELETE that step (it's a no-op now but leaves no harm).
+
+### Notes
+- No API changes. Pure NSIS template fix.
+- This is the reason TB v6.2.1 needs to be rebuilt as v6.2.2.
+
 ## [2.2.3] — 2026-04-20
 
 ### Fixed
