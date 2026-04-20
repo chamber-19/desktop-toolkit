@@ -23,7 +23,7 @@ import { UpdateModal } from "../components/UpdateModal/UpdateModal";
 import "./updater.css";
 
 // ── Initial status shown while start_update runs ─────────────────────────
-const STATUS_CLOSING: &str = "Closing application…";
+const STATUS_CLOSING = "Closing application…";
 function Updater() {
   // "waiting" → initial state before update_info arrives
   // "modal"   → UpdateModal is visible, user must confirm
