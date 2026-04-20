@@ -1,6 +1,6 @@
 {
   "name": "@chamber-19/desktop-toolkit",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Shared JS/React primitives for chamber-19 desktop tools",
   "license": "MIT",
   "type": "module",
@@ -11,7 +11,10 @@
     "./components/UpdateModal": "./src/components/UpdateModal/UpdateModal.jsx",
     "./utils/version": "./src/utils/version.js"
   },
-  "files": ["src"],
+  "bin": {
+    "desktop-toolkit-sync-installer-assets": "./build-scripts/sync-installer-assets.mjs"
+  },
+  "files": ["src", "build-scripts", "installer"],
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"

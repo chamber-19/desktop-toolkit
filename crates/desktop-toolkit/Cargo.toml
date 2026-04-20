@@ -1,0 +1,17 @@
+[package]
+name = "desktop-toolkit"
+version = "2.1.0"
+description = "Shared Tauri framework crate for chamber-19 desktop tools"
+authors = ["Koraji"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77.2"
+repository = "https://github.com/chamber-19/desktop-toolkit"
+keywords = ["tauri", "desktop", "framework", "updater", "splash"]
+categories = ["gui"]
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+semver = "1"

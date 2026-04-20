@@ -6,6 +6,102 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-04-20
+
+### Added
+
+- **`crates/desktop-toolkit/`** — Published Rust library crate consumable via
+  `cargo add` or git-URL pinning.  Lifts `splash.rs`, `updater.rs`,
+  `sidecar.rs`, and `log.rs` from the v2.0.0 scaffolding template into a
+  proper crate.  All tool-specific values (`sidecar_name`, `app_identifier`,
+  `current_version`, `log_dir`) are accepted at runtime; no `${TOOL_*}`
+  placeholders remain in the published crate.
+- **`crates/desktop-toolkit-updater/`** — Separate updater shim binary
+  (`desktop-toolkit-updater.exe`) that handles the entire upgrade flow as an
+  independent process.  Accepts `--installer`, `--installed-app-exe`,
+  `--version`, and `--sidecar-name` CLI args; kills the sidecar, waits on the
+  NSIS installer, and relaunches the new app version.  Ships as part of the
+  Cargo workspace so consumers can build it locally or consume a pre-built
+  artifact from CI.
+- **`build-scripts/sync-installer-assets.mjs`** — Node script that copies the
+  framework's NSIS assets (`hooks.nsh`, `nsis-header.*`, `nsis-sidebar.*`)
+  into the consumer's `frontend/src-tauri/installer/` directory at build time.
+  Invokable as `desktop-toolkit-sync-installer-assets` when the package is
+  installed (wired via the `bin` field in `package.json`).
+- **`Cargo.toml`** (workspace root) — Cargo workspace declaring both framework
+  crates; enables `cargo check` across the whole repo.
+- Python package now declares version `2.1.0` for consistency with the JS and
+  Rust releases.
+
+### Fixed
+
+- **Critical — auto-updater no longer fails silently.**  The v2.0.0 design
+  blocked the parent process on `child.wait()` while the NSIS installer tried
+  to replace the parent's own `.exe`.  NSIS cannot replace a locked file, so
+  the install silently failed: the progress window appeared, status messages
+  cycled, the app died from the NSIS `taskkill` hook, and the version never
+  changed.  v2.1.0 delegates the entire upgrade flow to the separate
+  `desktop-toolkit-updater.exe` shim.  The parent app copies the installer to
+  `%TEMP%`, spawns the shim as `DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP`,
+  and immediately calls `app.exit(0)` to release all file locks.  The shim
+  survives the parent's exit, waits on NSIS, and relaunches the new version.
+- `start_update` in `tauri-template/src-tauri-base/src/lib.rs` no longer calls
+  `child.wait()` or `taskkill` on the sidecar from the parent process — both
+  responsibilities are delegated to the shim.
+- `installer/nsis/hooks.nsh` `_KillAppProcesses` macro now also kills
+  `desktop-toolkit-updater.exe` defensively during pre-install.
+- `NSIS_HOOK_POSTINSTALL` now includes the `File` directive that bundles
+  `desktop-toolkit-updater.exe` into `${INSTDIR}` alongside the main app exe.
+
+### Changed
+
+- `js/packages/desktop-toolkit/package.json` — version bumped to `2.1.0`;
+  added `bin` entry exposing `desktop-toolkit-sync-installer-assets`; added
+  `build-scripts` and `installer` to the `files` list so they are included
+  in the published package.
+- `tauri-template/src-tauri-base/Cargo.toml.template` — replaced the inline
+  `semver = "1"` dependency with
+  `desktop-toolkit = { git = "...", tag = "v2.1.0" }` so new tool scaffolds
+  reference the published crate rather than embedding their own Rust source.
+- `python/pyproject.toml` — version bumped to `2.1.0`.
+
+### Migration from v2.0.0
+
+Consumers (e.g. Transmittal Builder) should:
+
+1. **Rust** — Add to `Cargo.toml`:
+   ```toml
+   desktop-toolkit = { git = "https://github.com/chamber-19/desktop-toolkit", tag = "v2.1.0" }
+   ```
+   Replace any `// SYNCED FROM desktop-toolkit v2.0.0` local Rust modules
+   (`splash.rs`, `updater.rs`, `sidecar.rs`) with imports:
+   ```rust
+   use desktop_toolkit::{splash, updater, sidecar};
+   ```
+
+2. **`start_update` command** — Update to use the new shim-aware signature:
+   ```rust
+   #[tauri::command]
+   pub fn start_update(
+       app: tauri::AppHandle,
+       state: tauri::State<desktop_toolkit::updater::UpdateState>,
+   ) {
+       desktop_toolkit::updater::start_update(app, state, "my-sidecar-name", "my-tool");
+   }
+   ```
+
+3. **NSIS / installer assets** — Add `desktop-toolkit-sync-installer-assets`
+   to the `prebuild` npm script.  Add synced files to `.gitignore`.  Ensure
+   CI builds `desktop-toolkit-updater.exe` and places it in
+   `frontend/src-tauri/` before running `tauri build`.
+
+4. **Python** — Switch from local `pdf_merge` / `email_sender` imports to:
+   ```python
+   from chamber19_desktop_toolkit.utils import pdf_merge, email_sender
+   ```
+
+---
+
 ## [2.0.0] — 2026-04-20
 
 > ⚠️ **The auto-updater is known broken at the architectural level.** The parent

@@ -1,0 +1,14 @@
+[package]
+name = "desktop-toolkit-updater"
+version = "2.1.0"
+description = "desktop-toolkit updater shim — separate process that handles silent-install upgrades"
+authors = ["Koraji"]
+license = "MIT"
+edition = "2021"
+rust-version = "1.77.2"
+repository = "https://github.com/chamber-19/desktop-toolkit"
+publish = false
+
+[[bin]]
+name = "desktop-toolkit-updater"
+path = "src/main.rs"
