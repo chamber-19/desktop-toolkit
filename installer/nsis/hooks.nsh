@@ -2,18 +2,23 @@
 ;
 ; ── USAGE ─────────────────────────────────────────────────────────────────
 ; Copy this file to your tool's frontend/src-tauri/installer/hooks.nsh and
-; replace every ${PRODUCT_NAME} token with your product name before building.
+; replace every ${PLACEHOLDER} token with your tool's values before building.
 ;
 ; Simple sed one-liner (from the repository root):
-;   sed 's/\${PRODUCT_NAME}/My Tool Name/g' hooks.nsh > hooks_out.nsh
+;   sed 's/\${PRODUCT_NAME}/My Tool Name/g;
+;        s/\${TOOL_SIDECAR_NAME}/my-tool-backend/g' hooks.nsh > hooks_out.nsh
 ;
 ; Or PowerShell:
-;   (Get-Content hooks.nsh) -replace '\$\{PRODUCT_NAME\}','My Tool Name' |
+;   (Get-Content hooks.nsh) `
+;     -replace '\$\{PRODUCT_NAME\}','My Tool Name' `
+;     -replace '\$\{TOOL_SIDECAR_NAME\}','my-tool-backend' |
 ;     Set-Content hooks_out.nsh
 ;
 ; Tokens:
-;   ${PRODUCT_NAME}  — human-readable product name shown in all captions,
-;                      e.g. "My Tool"
+;   ${PRODUCT_NAME}       — human-readable product name shown in all captions,
+;                           e.g. "My Tool"
+;   ${TOOL_SIDECAR_NAME}  — PyInstaller sidecar binary name without .exe,
+;                           e.g. "my-tool-backend"
 ;
 ; ── SCOPE ─────────────────────────────────────────────────────────────────
 ; Wired in via tauri.conf.json -> bundle.windows.nsis.installerHooks.
@@ -69,15 +74,26 @@ UninstallCaption "${PRODUCT_NAME} — Uninstaller"
 !define MUI_UNTEXT_CONFIRM_TITLE                 "Remove ${PRODUCT_NAME}"
 !define MUI_UNTEXT_CONFIRM_SUBTITLE              "Confirm that you want to uninstall."
 
-; Tauri's installer.nsi.tera looks for these optional macros and
-; `!insertmacro`s them at the appropriate point if defined. We don't
-; need any extra logic right now, but defining empty macros keeps the
-; hook surface explicit and documents intent for future tweaks.
+; ── Pre-install hook: terminate running processes ─────────────────────────
+; Kills the app and sidecar before the installer overwrites the binaries.
+; ${PRODUCT_NAME} is injected by Tauri's installer template.
+; Replace ${TOOL_SIDECAR_NAME} with the actual sidecar binary name.
 !macro NSIS_HOOK_PREINSTALL
+  nsExec::Exec 'taskkill /F /IM "${PRODUCT_NAME}.exe" /T'
+  nsExec::Exec 'taskkill /F /IM "${TOOL_SIDECAR_NAME}.exe" /T'
+  Sleep 2000
 !macroend
+
 !macro NSIS_HOOK_POSTINSTALL
 !macroend
+
+; ── Pre-uninstall hook: terminate running processes ───────────────────────
+; Kills the app and sidecar before the uninstaller removes the binaries.
 !macro NSIS_HOOK_PREUNINSTALL
+  nsExec::Exec 'taskkill /F /IM "${PRODUCT_NAME}.exe" /T'
+  nsExec::Exec 'taskkill /F /IM "${TOOL_SIDECAR_NAME}.exe" /T'
+  Sleep 2000
 !macroend
+
 !macro NSIS_HOOK_POSTUNINSTALL
 !macroend

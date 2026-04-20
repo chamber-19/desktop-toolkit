@@ -6,15 +6,52 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Changed
-- Removed all R3P / ROOT3POWER branding from framework source, examples, and assets in preparation for clean v1.1.0 launch under the `chamber-19` org.
-- Updater UI no longer renders hardcoded "R3P" text; now displays the same anvil/loader visual as the splash component.
-- NSIS installer artwork (`installer/nsis/nsis-header.svg`, `nsis-sidebar.svg`) reduced to the anvil mark only — no embedded product or vendor text.
-- Tauri template example identifiers and authors updated from `com.root3power.*` / `ROOT3POWER ENGINEERING` to neutral examples.
+## [2.0.0] — 2026-04-20
 
-### Removed
-- `js/packages/desktop-toolkit/src/splash/assets/r3p-logo.svg`
-- `js/packages/desktop-toolkit/src/splash/assets/r3p-logo-transparent.svg`
+> ⚠️ **The auto-updater is known broken at the architectural level.** The parent
+> process blocks on the NSIS installer that needs to replace the parent's own
+> exe. This will be fixed in a follow-up v2.1.0 PR. **Do not consume v2.0.0 in
+> production until v2.1.0 ships with the architectural fix.**
+
+### Added
+
+- `js/packages/desktop-toolkit/src/components/UpdateModal/UpdateModal.jsx` +
+  `UpdateModal.css` — Mandatory, non-dismissible force-update confirmation modal.
+  Rendered by the updater window as its initial state; exported as
+  `@chamber-19/desktop-toolkit/components/UpdateModal` for consumers that need
+  to embed it elsewhere.
+- `start_update` Tauri command in `tauri-template/src-tauri-base/src/lib.rs` —
+  Invoked by the `UpdateModal` when the user clicks **Install Now**.
+  Sidekill-only behavior: kills the sidecar by image name, spawns the NSIS
+  installer DETACHED, then calls `app.exit(0)`. Does **not** taskkill the main
+  app process (no self-taskkill regression from v6.1.5 fix).
+- `UpdateState` Tauri managed state — holds the pending `LatestJson` and
+  `update_path` so `start_update` can retrieve the installer after startup.
+- `SIDECAR_NAME` constant in `lib.rs` (placeholder: `${TOOL_SIDECAR_NAME}`) —
+  consumers replace before building; used by `find_sidecar_path` and
+  `start_update`'s taskkill call.
+- NSIS pre-install and pre-uninstall taskkill hooks in
+  `installer/nsis/hooks.nsh` — terminates the running app and sidecar before
+  the installer overwrites binaries, preventing "file in use" install failures.
+- `update_status` Tauri event emitted by `start_update` — drives the status
+  message display in the updater progress window.
+
+### Changed
+
+- `updater/index.jsx` — now shows `UpdateModal` as its initial state when
+  `update_info` arrives; transitions to the branded progress view after the user
+  confirms. Listens for `update_status` events for human-readable status text
+  (e.g. "Stopping background services…", "Installing version X…").
+- `startup_sequence` in `lib.rs` — on `UpdateAvailable`, stores the update info
+  in `UpdateState` and shows the updater window, but no longer auto-copies and
+  auto-launches the installer; the user must confirm via the `UpdateModal`.
+- `installer/nsis/hooks.nsh` — added `${TOOL_SIDECAR_NAME}` placeholder and
+  instructions; PREINSTALL / PREUNINSTALL macros now contain real taskkill logic.
+- `js/packages/desktop-toolkit/package.json` — version bumped to `2.0.0`;
+  added `./components/UpdateModal` export entry.
+- `python/pyproject.toml` — version bumped to `2.0.0` for consistency.
+
+### [Unreleased] items from v1.1.0 now released
 
 ## [1.1.0] — 2026-04-18
 

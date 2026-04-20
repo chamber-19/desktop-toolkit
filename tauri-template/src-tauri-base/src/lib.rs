@@ -29,11 +29,38 @@ use std::time::{Duration, Instant};
 use tauri::{Emitter, Listener, Manager};
 use tauri_plugin_dialog::{DialogExt, MessageDialogKind};
 
+// ── Sidecar name ──────────────────────────────────────────────────────────
+
+/// Name of the PyInstaller sidecar binary (without `.exe` extension).
+///
+/// Replace `${TOOL_SIDECAR_NAME}` with the actual sidecar name before use,
+/// e.g. `"my-tool-backend"`.  This value must match the `sidecarName`
+/// field in your `tauri.conf.json` and the PyInstaller spec `name`.
+const SIDECAR_NAME: &str = "${TOOL_SIDECAR_NAME}";
+
 // ── Backend state ─────────────────────────────────────────────────────────
 
 /// Holds the backend base URL; updated once the sidecar starts.
 struct BackendState {
     url: Mutex<String>,
+}
+
+// ── Update state ──────────────────────────────────────────────────────────
+
+/// Holds the pending update information so the `start_update` Tauri command
+/// can access the installer path after the user confirms in the UpdateModal.
+struct UpdateState {
+    latest: Mutex<Option<updater::LatestJson>>,
+    update_path: Mutex<Option<PathBuf>>,
+}
+
+impl UpdateState {
+    fn new() -> Self {
+        Self {
+            latest: Mutex::new(None),
+            update_path: Mutex::new(None),
+        }
+    }
 }
 
 /// Tauri command: return the backend base URL to the webview.
@@ -198,6 +225,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_backend_url,
             peek_subfolders,
+            start_update,
             splash::splash_is_first_run,
             splash::splash_ready,
             splash::splash_fade_complete,
@@ -205,6 +233,7 @@ pub fn run() {
         .manage(BackendState {
             url: Mutex::new(String::from("http://127.0.0.1:8000")),
         })
+        .manage(UpdateState::new())
         .manage(splash::SplashState::new(splash::splash_first_launch_after_update()))
         .setup(move |app| {
             let app_handle = app.handle().clone();
@@ -382,6 +411,13 @@ fn startup_sequence(app: tauri::AppHandle, child_arc: Arc<Mutex<Option<Child>>>)
                 update_path.display(),
             ));
 
+            // Store update info in managed state so `start_update` can
+            // retrieve it when the user clicks Install Now in the UpdateModal.
+            if let Some(update_state) = app.try_state::<UpdateState>() {
+                *update_state.latest.lock().unwrap() = Some(latest.clone());
+                *update_state.update_path.lock().unwrap() = Some(update_path.clone());
+            }
+
             // 1. Register the 'updater_ready' listener BEFORE scheduling the
             //    window show so we never miss the event if React mounts fast.
             let (ready_tx, ready_rx) = mpsc::channel::<()>();
@@ -405,9 +441,10 @@ fn startup_sequence(app: tauri::AppHandle, child_arc: Arc<Mutex<Option<Child>>>)
             // 3. Wait for the React bundle to mount and register its event
             //    listeners (up to 2 s; fall through immediately on timeout).
             let _ = ready_rx.recv_timeout(Duration::from_secs(2));
-            let updater_shown_at = Instant::now();
 
             // 4. Emit update_info now that React listeners are registered.
+            //    The updater window will display the UpdateModal; the user
+            //    must click Install Now which invokes `start_update`.
             let _ = app.emit(
                 "update_info",
                 serde_json::json!({
@@ -416,54 +453,8 @@ fn startup_sequence(app: tauri::AppHandle, child_arc: Arc<Mutex<Option<Child>>>)
                 }),
             );
 
-            // 5. Copy installer on this worker thread (app.emit is
-            //    thread-safe so progress events reach the updater window).
-            updater::log_updater(&format!(
-                "Copy start: installer={}, dest=%TEMP%\\transmittal-update.exe",
-                latest.installer,
-            ));
-            match updater::copy_installer_with_progress(&update_path, &latest.installer, &app) {
-                Ok(dest_path) => {
-                    // 6. Enforce ≥1.5 s of visible updater display so users
-                    //    can read the version/notes and see the progress bar.
-                    let min_display = Duration::from_millis(1_500);
-                    let elapsed = updater_shown_at.elapsed();
-                    if elapsed < min_display {
-                        thread::sleep(min_display - elapsed);
-                    }
-
-                    updater::log_updater(&format!(
-                        "Launching installer: {}",
-                        dest_path.display()
-                    ));
-                    let mut cmd = Command::new(&dest_path);
-                    cmd.args(["/PASSIVE", "/NORESTART"]);
-                    #[cfg(windows)]
-                    {
-                        use std::os::windows::process::CommandExt;
-                        cmd.creation_flags(0x0000_0008); // DETACHED_PROCESS
-                    }
-                    match cmd.spawn() {
-                        Ok(child) => {
-                            updater::log_updater(&format!(
-                                "Installer launched (PID {}) -- exiting",
-                                child.id()
-                            ));
-                            app.exit(0);
-                        }
-                        Err(e) => {
-                            updater::log_updater(&format!(
-                                "Failed to launch installer: {e}"
-                            ));
-                            app.exit(1);
-                        }
-                    }
-                }
-                Err(e) => {
-                    updater::log_updater(&format!("Copy failed: {e}"));
-                    app.exit(1);
-                }
-            }
+            // Startup sequence is done.  The UpdateModal in the updater
+            // window calls `start_update` when the user confirms.
         }
 
         UpdateOutcome::UpToDate => {
@@ -556,7 +547,7 @@ fn run_update_check_with_status(app: &tauri::AppHandle, hold_ms: u64) -> UpdateO
 
 fn do_spawn_backend(child_arc: &Arc<Mutex<Option<Child>>>) -> String {
     // Production: try the PyInstaller sidecar first.
-    if let Some(sidecar_path) = sidecar::find_sidecar_path() {
+    if let Some(sidecar_path) = sidecar::find_sidecar_path(SIDECAR_NAME) {
         println!("[sidecar] Found sidecar at: {}", sidecar_path.display());
         match sidecar::spawn_sidecar(&sidecar_path) {
             Ok((proc, port)) => {
@@ -641,4 +632,114 @@ fn spawn_python_backend(child_arc: &Arc<Mutex<Option<Child>>>) {
             eprintln!("[tauri] Failed to spawn Python backend: {e}");
         }
     }
+}
+
+// ── start_update command ──────────────────────────────────────────────────
+
+/// Tauri command invoked by the `UpdateModal` frontend component when the
+/// user clicks **Install Now**.
+///
+/// Sequence (sidekill-only — does **not** taskkill the main app exe):
+///   1. Read the pending installer name and shared-drive path from
+///      [`UpdateState`] (populated by `startup_sequence` on update detect).
+///   2. Copy the installer from the shared drive to `%TEMP%`, emitting
+///      `update_progress` and `update_status` events so the updater window
+///      can display a progress bar and status messages.
+///   3. Kill the sidecar process by image name.
+///   4. Spawn the NSIS installer DETACHED so it survives `app.exit(0)`.
+///   5. Call `app.exit(0)` — NSIS handles the reinstall and relaunch.
+///
+/// NOTE: the architectural bug (parent process blocks on installer that must
+/// replace the parent's exe) is known and will be addressed in Phase 3.
+/// Phase 1 lifts this code verbatim from Transmittal Builder.
+#[tauri::command]
+fn start_update(app: tauri::AppHandle, state: tauri::State<UpdateState>) {
+    let latest = state.latest.lock().unwrap().clone();
+    let update_path = state.update_path.lock().unwrap().clone();
+
+    let (latest, update_path) = match (latest, update_path) {
+        (Some(l), Some(p)) => (l, p),
+        _ => {
+            updater::log_updater("start_update: no pending update in state");
+            return;
+        }
+    };
+
+    let app_clone = app.clone();
+    thread::spawn(move || {
+        // ── 1. Status: preparing ──────────────────────────────────────────
+        let _ = app_clone.emit(
+            "update_status",
+            serde_json::json!({ "message": "Closing application…" }),
+        );
+
+        // ── 2. Copy installer from shared drive to %TEMP% ─────────────────
+        updater::log_updater(&format!(
+            "start_update: copying {} from shared drive",
+            latest.installer,
+        ));
+        let dest_path =
+            match updater::copy_installer_with_progress(&update_path, &latest.installer, &app_clone) {
+                Ok(p) => p,
+                Err(e) => {
+                    updater::log_updater(&format!("start_update: copy failed: {e}"));
+                    app_clone.exit(1);
+                    return;
+                }
+            };
+
+        // ── 3. Kill sidecar (sidekill only — no self-taskkill) ────────────
+        let _ = app_clone.emit(
+            "update_status",
+            serde_json::json!({ "message": "Stopping background services…" }),
+        );
+        updater::log_updater(&format!("start_update: taskkill {SIDECAR_NAME}.exe"));
+        #[cfg(windows)]
+        {
+            let _ = Command::new("taskkill")
+                .args(["/F", "/IM", &format!("{SIDECAR_NAME}.exe"), "/T"])
+                .status();
+        }
+
+        // Brief pause so Windows releases file handles before the installer
+        // runs against the sidecar directory.
+        thread::sleep(Duration::from_secs(1));
+
+        // ── 4. Emit status: installing ────────────────────────────────────
+        let _ = app_clone.emit(
+            "update_status",
+            serde_json::json!({
+                "message": format!("Installing version {}…", latest.version),
+            }),
+        );
+
+        // ── 5. Spawn NSIS installer DETACHED ──────────────────────────────
+        let mut cmd = Command::new(&dest_path);
+        cmd.args(["/PASSIVE", "/NORESTART"]);
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            cmd.creation_flags(0x0000_0008); // DETACHED_PROCESS
+        }
+        match cmd.spawn() {
+            Ok(child) => {
+                updater::log_updater(&format!(
+                    "start_update: installer launched (PID {}), exiting",
+                    child.id()
+                ));
+                let _ = app_clone.emit(
+                    "update_status",
+                    serde_json::json!({ "message": "Almost done…" }),
+                );
+                // Exit cleanly — NSIS installs the new version and relaunches.
+                app_clone.exit(0);
+            }
+            Err(e) => {
+                updater::log_updater(&format!(
+                    "start_update: failed to launch installer: {e}"
+                ));
+                app_clone.exit(1);
+            }
+        }
+    });
 }
