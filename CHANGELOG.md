@@ -19,6 +19,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - **`README.md`** — New "For consumers" section at the top pointing to
   `docs/CONSUMING.md`; cross-reference added to the existing "How tools consume this
   framework" section.
+- **CI: `hooks-nsh-in-sync` job** — New CI job that diffs
+  `installer/nsis/hooks.nsh` against `js/packages/desktop-toolkit/installer/nsis/hooks.nsh`
+  and fails if they diverge, preventing the two copies from drifting out of sync again.
 
 ### Fixed
 - **NSIS `File` directive fails outside `Section` context.** `installer/nsis/hooks.nsh`
@@ -26,6 +29,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   template invokes hooks from a `Function`, not a `Section`, so the `File` directive
   produced `Error: command File not valid outside Section or Function` on line 113.
   The shim is now distributed exclusively via `bundle.resources` in `tauri.conf.json`.
+- **Inner `js/packages/desktop-toolkit/installer/nsis/hooks.nsh` now matches the root
+  copy.** PR #23 fixed the root `installer/nsis/hooks.nsh` but forgot to apply the
+  identical fix to the inner copy that gets published to GitHub Packages. Both files
+  now contain the empty `NSIS_HOOK_POSTINSTALL` macro and are byte-for-byte identical.
+- **All four version manifests bumped to `2.2.5`.** PR #23 forgot to bump
+  `js/packages/desktop-toolkit/package.json`, `python/pyproject.toml`,
+  `crates/desktop-toolkit/Cargo.toml`, and `crates/desktop-toolkit-updater/Cargo.toml`
+  from `2.2.4`, causing the publish workflow's version-match guard to fail.
 
 ### Migration from v2.2.4
 - Add `"desktop-toolkit-updater.exe"` to `bundle.resources` in your
