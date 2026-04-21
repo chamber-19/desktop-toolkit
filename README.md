@@ -122,6 +122,31 @@ import SplashApp from "@chamber-19/desktop-toolkit/splash";
 import { APP_VERSION } from "@chamber-19/desktop-toolkit/utils/version";
 ```
 
+### Tauri config — updater shim (`bundle.resources`)
+
+As of v2.2.5, the `desktop-toolkit-updater.exe` shim **must** be bundled via
+Tauri's `bundle.resources` mechanism rather than the NSIS hooks file.
+
+Add the following to `src-tauri/tauri.conf.json`:
+
+```json
+{
+  "bundle": {
+    "resources": [
+      "desktop-toolkit-updater.exe"
+    ]
+  }
+}
+```
+
+After installation the shim will be at `<INSTDIR>\resources\desktop-toolkit-updater.exe`.
+
+Your CI workflow must build the shim and place it at
+`frontend/src-tauri/desktop-toolkit-updater.exe` **before** running `tauri build`.
+Use the `Build desktop-toolkit-updater shim` step in the
+[workflow template](../../.github/workflows/release-tauri-sidecar-app.yml.template)
+(substitute `${DESKTOP_TOOLKIT_TAG}` with the version you want to pin, e.g. `v2.2.5`).
+
 ---
 
 ## Versioning policy

@@ -235,6 +235,7 @@ jobs:
             -e 's|${SIDECAR_NAME}|ci-smoke-backend|g' \
             -e 's|${FRONTEND_DIR}|frontend|g' \
             -e 's|${INSTALLER_GLOB}|frontend\\src-tauri\\target\\release\\bundle\\nsis\\*.exe|g' \
+            -e 's|${DESKTOP_TOOLKIT_TAG}|v2.2.5|g' \
             .github/workflows/release-tauri-sidecar-app.yml.template > "$STAGE"
           STAGE_PATH="$STAGE" python - <<'PY'
           import os, yaml

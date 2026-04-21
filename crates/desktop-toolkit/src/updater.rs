@@ -246,6 +246,11 @@ pub fn copy_installer_with_progress(
 /// detached process, then calls `app.exit(0)` to release the file lock on the
 /// parent exe so NSIS can replace it.
 ///
+/// As of v2.2.5 the shim is bundled via `bundle.resources` and lives at
+/// `<INSTDIR>\resources\desktop-toolkit-updater.exe` (one level below the
+/// app exe). `start_update` locates it via the `resources/` subdirectory of
+/// the app exe's parent directory.
+///
 /// # Arguments
 /// * `app`          — Tauri AppHandle.
 /// * `state`        — Tauri managed [`UpdateState`] (populated at startup).
@@ -274,6 +279,7 @@ pub fn start_update(
         .map_err(|e| e.to_string())?
         .parent()
         .ok_or("no parent dir")?
+        .join("resources")
         .join("desktop-toolkit-updater.exe");
 
     let installed_app_exe =

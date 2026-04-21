@@ -644,7 +644,9 @@ fn spawn_python_backend(child_arc: &Arc<Mutex<Option<Child>>>) {
 ///      [`UpdateState`] (populated by `startup_sequence` on update detect).
 ///   2. Copy the installer from the shared drive to `%TEMP%`, emitting
 ///      `update_progress` and `update_status` events.
-///   3. Locate `desktop-toolkit-updater.exe` next to the running app exe.
+///   3. Locate `desktop-toolkit-updater.exe` in the `resources/` subdirectory
+///      next to the running app exe (bundled via `bundle.resources` in
+///      tauri.conf.json as of v2.2.5).
 ///   4. Spawn the shim DETACHED with `--installer`, `--installed-app-exe`,
 ///      `--version`, and `--sidecar-name` args.
 ///   5. Call `app.exit(0)` — releasing the file lock on the parent exe so
@@ -696,7 +698,7 @@ fn start_update(app: tauri::AppHandle, state: tauri::State<UpdateState>) {
         // ── 3. Locate the updater shim ────────────────────────────────────
         let updater_exe = match std::env::current_exe()
             .ok()
-            .and_then(|p| p.parent().map(|d| d.join("desktop-toolkit-updater.exe")))
+            .and_then(|p| p.parent().map(|d| d.join("resources").join("desktop-toolkit-updater.exe")))
         {
             Some(p) => p,
             None => {

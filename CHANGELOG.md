@@ -6,6 +6,78 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.5] — 2026-04-21
+
+### Fixed
+
+- **BREAKING — `NSIS_HOOK_POSTINSTALL` `File` directive broke all consumer builds.**
+  The v2.2.4 `installer/nsis/hooks.nsh` contained:
+
+  ```nsis
+  !macro NSIS_HOOK_POSTINSTALL
+    File "${BUILD_DIR}\desktop-toolkit-updater.exe"
+  !macroend
+  ```
+
+  Tauri 2 invokes `NSIS_HOOK_POSTINSTALL` from a context where the NSIS
+  `File` directive is illegal (outside a Section). Every consumer that synced
+  this file via `desktop-toolkit-sync-installer-assets` and ran `tauri build`
+  received:
+
+  ```
+  Error: command File not valid outside Section or Function
+  !include: error in script: "…\hooks.nsh" on line 113
+  ```
+
+  **Fix:** `NSIS_HOOK_POSTINSTALL` is now empty. The macro body is replaced
+  with an explanatory comment. Both copies of `hooks.nsh` are updated:
+  `installer/nsis/hooks.nsh` and
+  `js/packages/desktop-toolkit/installer/nsis/hooks.nsh`.
+
+### Changed
+
+- **Updater shim path.** The `desktop-toolkit-updater.exe` shim is no longer
+  copied into `${INSTDIR}` alongside the main app exe via the NSIS hook.
+  Consumers must now bundle it via Tauri's `bundle.resources` mechanism
+  (see Migration below). The shim lands at
+  `<INSTDIR>\resources\desktop-toolkit-updater.exe` after installation.
+
+  Both `crates/desktop-toolkit/src/updater.rs` (`start_update`) and
+  `tauri-template/src-tauri-base/src/lib.rs` (`start_update`) now look for the
+  shim at `<exe-dir>\resources\desktop-toolkit-updater.exe` instead of
+  `<exe-dir>\desktop-toolkit-updater.exe`.
+
+- **Workflow template.** `.github/workflows/release-tauri-sidecar-app.yml.template`
+  now includes a "Build desktop-toolkit-updater shim" step (step 5) that clones
+  the pinned desktop-toolkit release, builds the shim with `cargo build`, and
+  places it at `${FRONTEND_DIR}/src-tauri/desktop-toolkit-updater.exe` ready for
+  `bundle.resources` pickup. A new `${DESKTOP_TOOLKIT_TAG}` placeholder must be
+  substituted (e.g. `v2.2.5`).
+
+### Migration from v2.2.4
+
+1. **`tauri.conf.json`** — Add the shim to `bundle.resources`:
+
+   ```json
+   {
+     "bundle": {
+       "resources": [
+         "desktop-toolkit-updater.exe"
+       ]
+     }
+   }
+   ```
+
+2. **CI workflow** — Add the "Build desktop-toolkit-updater shim" step from the
+   updated workflow template BEFORE the `tauri build` step. Substitute
+   `${DESKTOP_TOOLKIT_TAG}` with `v2.2.5` (or the version you want to pin).
+
+3. **Updater shim path** — If you have any hardcoded reference to the shim at
+   `<INSTDIR>\desktop-toolkit-updater.exe`, update it to
+   `<INSTDIR>\resources\desktop-toolkit-updater.exe`.
+   If you use the `desktop-toolkit` crate's `start_update` function, no change
+   is needed — it already uses the new path.
+
 ## [2.2.4] — 2026-04-20
 
 ### Fixed
