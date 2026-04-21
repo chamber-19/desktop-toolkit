@@ -102,15 +102,21 @@ UninstallCaption "${PRODUCTNAME} — Uninstaller"
   !insertmacro _KillAppProcesses
 !macroend
 
-; ── Post-install hook: bundle the updater shim ────────────────────────────
-; Bundles the desktop-toolkit-updater shim alongside the main app exe.
-; The shim must be pre-built and placed in ${BUILD_DIR} by CI before
-; running `tauri build`. Consumers should add the shim build step to
-; their CI workflow:
-;   cargo build --release -p desktop-toolkit-updater
-;   copy target\release\desktop-toolkit-updater.exe frontend\src-tauri\
+; ── Post-install hook: (no-op — shim is bundled via tauri.conf.json bundle.resources) ─
+; As of v2.2.5, the desktop-toolkit-updater shim is no longer bundled here via a
+; NSIS `File` directive. Tauri 2 invokes `NSIS_HOOK_POSTINSTALL` from a Function
+; context, where `File` is not valid (NSIS only allows `File` inside a Section).
+;
+; Instead, consumers must list `desktop-toolkit-updater.exe` in their
+; `tauri.conf.json` → `bundle.resources` array. Tauri's bundler then copies the
+; shim to `<INSTDIR>\resources\desktop-toolkit-updater.exe` during packaging.
+;
+; CI workflow: build the shim with `cargo build --release -p desktop-toolkit-updater`
+; and copy `target\release\desktop-toolkit-updater.exe` to `frontend\src-tauri\`
+; before running `tauri build`.
+;
+; See docs/CONSUMING.md — "Updater shim integration" for the full setup.
 !macro NSIS_HOOK_POSTINSTALL
-  File "${BUILD_DIR}\desktop-toolkit-updater.exe"
 !macroend
 
 ; ── Pre-uninstall hook: terminate running processes ───────────────────────
