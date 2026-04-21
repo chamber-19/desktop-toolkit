@@ -11,6 +11,14 @@ For the full extraction inventory and migration plan see
 
 ---
 
+## For consumers
+
+Building a new tool on top of this framework? See **[docs/CONSUMING.md](./docs/CONSUMING.md)**
+for the complete onboarding guide: npm registry auth, package access grants, file templates,
+CI workflow setup, local PAT configuration, and a copy-paste-ready checklist.
+
+---
+
 ## Repository layout
 
 ```
@@ -76,6 +84,9 @@ desktop-toolkit/
 ---
 
 ## How tools consume this framework
+
+→ See [docs/CONSUMING.md](./docs/CONSUMING.md) for the full onboarding guide including
+auth setup, file templates, CI workflow, and the complete bootstrap checklist.
 
 ### Python (`chamber19_desktop_toolkit`)
 

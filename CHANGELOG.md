@@ -6,6 +6,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.5] — 2026-04-21
+
+### Added
+- **`docs/CONSUMING.md`** — Full consumer onboarding guide covering: npm registry auth
+  and GitHub Packages access grants, file templates (`.npmrc`, `package.json`,
+  `tauri.conf.json`, `Cargo.toml`, `requirements.txt`, `hooks.nsh`), complete
+  `release.yml` and `copilot-setup-steps.yml` workflow templates, local PAT setup,
+  updater shim Rust path resolution, versioning policy, troubleshooting table, and
+  a copy-paste bootstrap checklist. Lets a new maintainer spin up a consumer tool
+  end-to-end without reading existing consumer source code.
+- **`README.md`** — New "For consumers" section at the top pointing to
+  `docs/CONSUMING.md`; cross-reference added to the existing "How tools consume this
+  framework" section.
+
+### Fixed
+- **NSIS `File` directive fails outside `Section` context.** `installer/nsis/hooks.nsh`
+  no longer uses a `File` directive inside `NSIS_HOOK_POSTINSTALL`. Tauri 2's NSIS
+  template invokes hooks from a `Function`, not a `Section`, so the `File` directive
+  produced `Error: command File not valid outside Section or Function` on line 113.
+  The shim is now distributed exclusively via `bundle.resources` in `tauri.conf.json`.
+
+### Migration from v2.2.4
+- Add `"desktop-toolkit-updater.exe"` to `bundle.resources` in your
+  `frontend/src-tauri/tauri.conf.json`.
+- Update the shim path resolution in Rust from `app_exe_dir.join("desktop-toolkit-updater.exe")`
+  to `app.path().resource_dir()?.join("desktop-toolkit-updater.exe")`.
+- Bump your npm pin to `^2.2.5`, Cargo tag to `v2.2.5`, and pip tag to `v2.2.5`.
+
 ## [2.2.4] — 2026-04-20
 
 ### Fixed
