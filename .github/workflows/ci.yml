@@ -361,3 +361,15 @@ jobs:
           else
             echo "No lockfile present in js/packages/desktop-toolkit; skipping."
           fi
+
+  hooks-nsh-in-sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify root and inner hooks.nsh are identical
+        run: |
+          diff installer/nsis/hooks.nsh js/packages/desktop-toolkit/installer/nsis/hooks.nsh \
+            && echo "OK: hooks.nsh files are identical" \
+            || { echo "ERROR: hooks.nsh files have diverged — update js/packages/desktop-toolkit/installer/nsis/hooks.nsh to match installer/nsis/hooks.nsh"; exit 1; }
