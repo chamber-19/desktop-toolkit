@@ -549,8 +549,9 @@ jobs:
 ### Create a Personal Access Token (PAT)
 
 1. Navigate to: <https://github.com/settings/tokens/new>
-2. Token type: **Classic token** (not fine-grained — GitHub Packages requires classic tokens
-   for `read:packages`).
+2. Token type: **Classic token** is the safest choice for `read:packages`. Fine-grained
+   tokens may also work for GitHub Packages on some account configurations, but classic
+   tokens with `read:packages` are the tested and documented path for this org.
 3. Name: `chamber-19 packages reader` (or any name you'll recognise).
 4. Expiration: **90 days** is a good balance between security and convenience. Set a calendar
    reminder to rotate it.
