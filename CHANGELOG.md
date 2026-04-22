@@ -6,6 +6,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.6] — 2026-04-22
+
+### Fixed
+- **Updater shim lookup now matches the documented `bundle.resources` contract.**
+  The Rust framework crate and the Tauri template now look for
+  `desktop-toolkit-updater.exe` under the Tauri resources directory first,
+  with a compatibility fallback to the app exe directory for older installs
+  that still promote the shim into `<INSTDIR>`.
+- **Release workflow no longer risks uploading a stale cached installer.**
+  The workflow template and consumer docs now delete cached
+  `target/release/bundle/nsis` outputs before `tauri build` and select the
+  installer whose filename matches the current tag version, instead of
+  blindly taking the first `*.exe` match from a cache-restored directory.
+- **`publish-to-drive.ps1` now copies the installer named by `latest.json`.**
+  The script no longer publishes the first downloaded `*.exe`; it parses the
+  release manifest and verifies that the expected installer asset is present
+  before copying anything to the shared drive.
+
 ## [2.2.5] — 2026-04-21
 
 ### Added

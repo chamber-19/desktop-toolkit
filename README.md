@@ -1,13 +1,13 @@
 # desktop-toolkit
 
 Shared scaffolding for CHAMBER-19 desktop tools — extracted from
-[Transmittal-Builder v5.0.0](https://github.com/Koraji95-coder/Transmittal-Builder/releases/tag/v5.0.0).
+[Transmittal Builder v5.0.0](https://github.com/chamber-19/transmittal-builder/releases/tag/v5.0.0).
 
 Contains UI primitives, Tauri sidecar boilerplate, NSIS installer assets, build scripts,
 and CI templates consumed by **Transmittal-Builder**, **Drawing-List-Manager**, and future tools.
 
-For the full extraction inventory and migration plan see
-[`docs/framework-extraction/`](https://github.com/Koraji95-coder/Transmittal-Builder/tree/main/docs/framework-extraction).
+For the historical extraction inventory and migration plan see
+[`docs/framework-extraction/`](https://github.com/chamber-19/transmittal-builder/tree/main/docs/framework-extraction).
 
 ---
 
@@ -94,7 +94,7 @@ auth setup, file templates, CI workflow, and the complete bootstrap checklist.
 
 ```toml
 # In your tool's pyproject.toml or requirements.txt
-chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v1.1.0#subdirectory=python
+chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v2.2.6#subdirectory=python
 ```
 
 **Usage:**
@@ -139,7 +139,9 @@ import { APP_VERSION } from "@chamber-19/desktop-toolkit/utils/version";
 
 This repo uses **SemVer** (`vMAJOR.MINOR.PATCH`).
 
-- **Consumer tools pin exact tags only** — no range specifiers (`^`, `~`).
+- **JavaScript consumers** can pin `@chamber-19/desktop-toolkit` with `^x.y.z`
+  because GitHub Packages publishes immutable versions.
+- **Rust and Python consumers** should pin exact git tags (`vX.Y.Z`).
 - A breaking API change requires a major version bump.
 - The `v1.0.0` tag is cut manually after the initial extraction PR merges.
 

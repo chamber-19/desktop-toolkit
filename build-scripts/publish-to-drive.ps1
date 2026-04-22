@@ -66,18 +66,35 @@ gh release download $Tag --repo $Repo --dir $TempDir --clobber
 Write-OK "Assets downloaded"
 
 # ── Locate downloaded files ──────────────────────────────────────────────────
-$NewInstaller = Get-ChildItem $TempDir -Filter "*.exe" | Select-Object -First 1
 $NewLatestJson = Join-Path $TempDir "latest.json"
 
-if (-not $NewInstaller) {
-    throw "No .exe found in downloaded assets in $TempDir"
-}
 if (-not (Test-Path $NewLatestJson)) {
     throw "latest.json not found in downloaded assets in $TempDir"
 }
 
+$LatestManifest = Get-Content -Raw -Path $NewLatestJson | ConvertFrom-Json
+if (-not $LatestManifest.installer) {
+    throw "latest.json in $TempDir does not contain an installer field"
+}
+
+$ExpectedInstallerName = [string]$LatestManifest.installer
+$ExpectedInstallerPath = Join-Path $TempDir $ExpectedInstallerName
+if (-not (Test-Path $ExpectedInstallerPath)) {
+    $AvailableExecutables = Get-ChildItem $TempDir -Filter "*.exe" -File |
+        Select-Object -ExpandProperty Name
+    $AvailableList = if ($AvailableExecutables) {
+        $AvailableExecutables -join ", "
+    } else {
+        "<none>"
+    }
+    throw "Installer '$ExpectedInstallerName' from latest.json was not found in $TempDir. Available executables: $AvailableList"
+}
+
+$NewInstaller = Get-Item $ExpectedInstallerPath
+
 Write-OK "Installer : $($NewInstaller.Name)"
 Write-OK "Manifest  : latest.json"
+Write-OK "Version   : $($LatestManifest.version)"
 
 # ── Archive existing installer ───────────────────────────────────────────────
 Write-Step "Archiving existing installer"

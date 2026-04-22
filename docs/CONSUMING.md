@@ -81,7 +81,7 @@ git URL. No token, no registry config, no access grant needed.
 The `desktop-toolkit` Rust crate is pulled via a git URL:
 
 ```toml
-desktop-toolkit = { git = "https://github.com/chamber-19/desktop-toolkit", tag = "v2.2.5" }
+desktop-toolkit = { git = "https://github.com/chamber-19/desktop-toolkit", tag = "v2.2.6" }
 ```
 
 If `chamber-19/desktop-toolkit` is ever made private, Cargo will need credentials to clone
@@ -132,7 +132,7 @@ Minimal example showing the dependency entry, version pin, and prebuild asset-sy
     "tauri": "tauri"
   },
   "dependencies": {
-    "@chamber-19/desktop-toolkit": "^2.2.5"
+    "@chamber-19/desktop-toolkit": "^2.2.6"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
@@ -141,7 +141,7 @@ Minimal example showing the dependency entry, version pin, and prebuild asset-sy
 }
 ```
 
-> **Note:** `^2.2.5` is the minimum recommended pin. v2.2.5 is the first release where the
+> **Note:** `^2.2.6` is the current recommended pin. v2.2.5 is the first release where the
 > NSIS `File` directive issue is resolved and `bundle.resources` is the authoritative way
 > to ship the updater shim. Do not pin to v2.2.4 or earlier.
 
@@ -241,7 +241,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-desktop-toolkit = { git = "https://github.com/chamber-19/desktop-toolkit", tag = "v2.2.5" }
+desktop-toolkit = { git = "https://github.com/chamber-19/desktop-toolkit", tag = "v2.2.6" }
 tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
@@ -262,7 +262,7 @@ Pin to an exact tag. Do not use `branch = "main"` — that produces unreproducib
 ### `backend/requirements.txt`
 
 ```text name=backend/requirements.txt
-chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v2.2.5#subdirectory=python
+chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v2.2.6#subdirectory=python
 ```
 
 ### `frontend/src-tauri/installer/hooks.nsh`
@@ -422,7 +422,7 @@ jobs:
         shell: pwsh
         run: |
           # Clone the pinned tag (shallow) and build the updater shim binary.
-          $tag = "v2.2.5"   # Keep in sync with Cargo.toml and requirements.txt
+          $tag = "v2.2.6"   # Keep in sync with Cargo.toml and requirements.txt
           git clone --depth 1 --branch $tag https://github.com/chamber-19/desktop-toolkit.git /tmp/dtk
           Push-Location /tmp/dtk
           cargo build --release -p desktop-toolkit-updater
@@ -442,34 +442,59 @@ jobs:
         run: npm run build
         working-directory: frontend
 
-      # ── 7. Tauri build ───────────────────────────────────────────────────
+      # ── 7. Clean cached bundle outputs ───────────────────────────────────
+      - name: Clean cached NSIS bundle outputs
+        shell: pwsh
+        run: |
+          $bundleDir = "frontend\\src-tauri\\target\\release\\bundle\\nsis"
+          if (Test-Path $bundleDir) {
+            Remove-Item -Recurse -Force $bundleDir
+            Write-Host "Removed cached NSIS bundle directory: $bundleDir"
+          } else {
+            Write-Host "No cached NSIS bundle directory found at $bundleDir"
+          }
+
+      # ── 8. Tauri build ───────────────────────────────────────────────────
       - name: Build Tauri app (NSIS installer)
         run: npx tauri build
         working-directory: frontend
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
 
-      # ── 8. Locate built artefacts ────────────────────────────────────────
+      # ── 9. Locate built artefacts ────────────────────────────────────────
       - name: Locate NSIS installer
         id: find_installer
         shell: pwsh
         run: |
-          $exe = Get-ChildItem -Recurse `
-            "frontend\src-tauri\target\release\bundle\nsis\*.exe" |
-            Select-Object -First 1
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          $allInstallers = Get-ChildItem -Path "frontend\src-tauri\target\release\bundle\nsis\*.exe" -File
+          if (-not $allInstallers) { throw "NSIS installer not found!" }
+
+          $escapedVersion = [regex]::Escape($version)
+          $versionedInstallers = $allInstallers |
+            Where-Object { $_.Name -match "(^|[^0-9])$escapedVersion([^0-9]|$)" } |
+            Sort-Object LastWriteTimeUtc -Descending
+
+          if ($versionedInstallers) {
+            $exe = $versionedInstallers | Select-Object -First 1
+          } else {
+            Write-Warning "No installer filename matched version $version. Falling back to newest installer by timestamp."
+            $exe = $allInstallers | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+          }
+
           if (-not $exe) { throw "NSIS installer not found!" }
           echo "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
           echo "name=$($exe.Name)"     >> $env:GITHUB_OUTPUT
           Write-Host "Installer: $($exe.FullName)"
 
-      # ── 9. Generate latest.json ──────────────────────────────────────────
+      # ── 10. Generate latest.json ──────────────────────────────────────────
       - name: Generate latest.json
         run: node build-scripts/generate-latest-json.mjs
         env:
           INSTALLER_NAME: ${{ steps.find_installer.outputs.name }}
           TAG_NAME:       ${{ github.ref_name }}
 
-      # ── 10. Create GitHub Release ────────────────────────────────────────
+      # ── 11. Create GitHub Release ────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
@@ -615,7 +640,7 @@ npm ls @chamber-19/desktop-toolkit
 Expected output:
 ```
 my-tool-frontend@1.0.0 /path/to/your/repo/frontend
-└── @chamber-19/desktop-toolkit@2.2.5
+└── @chamber-19/desktop-toolkit@2.2.6
 ```
 
 If you see `401 Unauthorized` or `403 Forbidden`, work through the
@@ -690,15 +715,15 @@ All three packages share the same version number. When you bump, update all thre
 a single commit:
 
 ```text name=frontend/package.json (dependency line)
-"@chamber-19/desktop-toolkit": "^2.2.5"
+"@chamber-19/desktop-toolkit": "^2.2.6"
 ```
 
 ```toml name=frontend/src-tauri/Cargo.toml (dependency line)
-desktop-toolkit = { git = "https://github.com/chamber-19/desktop-toolkit", tag = "v2.2.5" }
+desktop-toolkit = { git = "https://github.com/chamber-19/desktop-toolkit", tag = "v2.2.6" }
 ```
 
 ```text name=backend/requirements.txt
-chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v2.2.5#subdirectory=python
+chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v2.2.6#subdirectory=python
 ```
 
 ### Optional: `scripts/bump-toolkit.mjs`
@@ -707,7 +732,7 @@ A small Node script can update all three files in one command:
 
 ```javascript name=scripts/bump-toolkit.mjs
 #!/usr/bin/env node
-// Usage: node scripts/bump-toolkit.mjs 2.2.5
+// Usage: node scripts/bump-toolkit.mjs 2.2.6
 import { readFileSync, writeFileSync } from "node:fs";
 
 const version = process.argv[2];
@@ -747,9 +772,10 @@ Run: `node scripts/bump-toolkit.mjs 2.2.6`
 |---|---|---|
 | `npm install` returns `401 Unauthorized` for `@chamber-19/desktop-toolkit` | `NODE_AUTH_TOKEN` is missing, expired, or lacks `read:packages` scope | Regenerate your PAT with only `read:packages`; export `NODE_AUTH_TOKEN`; run the verify step from [Local dev](#local-development-setup) |
 | CI `npm install` fails with `403 Forbidden` | Repo is not granted access on the package settings page | Add the repo via `https://github.com/orgs/chamber-19/packages/npm/desktop-toolkit/settings` → "Manage Actions access" |
-| `NSIS error: command File not valid outside Section or Function` on line 113 of `hooks.nsh` | Consumer is using `desktop-toolkit` ≤ 2.2.4 | Bump to `^2.2.5` in `package.json`, re-run `npm install`, and rebuild |
+| `NSIS error: command File not valid outside Section or Function` on line 113 of `hooks.nsh` | Consumer is using `desktop-toolkit` ≤ 2.2.4 | Bump to `^2.2.6` in `package.json`, re-run `npm install`, and rebuild |
 | Updater shim not found after install | Old install path (`<INSTDIR>` root) or `bundle.resources` entry missing | Add `"desktop-toolkit-updater.exe"` to `bundle.resources` in `tauri.conf.json`; update Rust path to use `app.path().resource_dir()` |
 | Auto-update progress window appears but version never changes | `desktop-toolkit-updater.exe` shim not present at runtime | Verify the shim was built and copied to `frontend/src-tauri/` before `tauri build`; verify `bundle.resources` includes it |
+| Latest installer download launches an older app build | The release workflow or shared-drive publish script selected the first cached `*.exe` instead of the installer for the current tag | Delete cached `target/release/bundle/nsis` outputs before `tauri build`; select the installer whose filename matches `${{ github.ref_name }}` / `latest.json.installer` rather than `Select-Object -First 1` |
 | `pip install chamber19-desktop-toolkit` returns 404 or `not found` | Tag doesn't exist on the remote, or URL typo | Verify the tag exists at `https://github.com/chamber-19/desktop-toolkit/releases`; check the `#subdirectory=python` suffix is present |
 | `cargo build` fails with `failed to authenticate when downloading repository` | The `desktop-toolkit` repo is private and no git auth is configured | Run `gh auth login`; or configure a Git credential helper; for CI, inject `GITHUB_TOKEN` via `git config` |
 | `npm run prebuild` (asset sync) silently skips `hooks.nsh` | `prebuild` script not wired up, or package not installed | Confirm `"prebuild": "desktop-toolkit-sync-installer-assets"` is in `scripts`; run `npm install` first |
@@ -769,11 +795,11 @@ items as you complete them.
 - [ ] Granted repo access to `@chamber-19/desktop-toolkit` package
       (Manage Actions access → https://github.com/orgs/chamber-19/packages/npm/desktop-toolkit/settings)
 - [ ] Committed `frontend/.npmrc` with the registry + token template
-- [ ] Added `@chamber-19/desktop-toolkit@^2.2.5` to `frontend/package.json` dependencies
+- [ ] Added `@chamber-19/desktop-toolkit@^2.2.6` to `frontend/package.json` dependencies
 - [ ] Added `"prebuild": "desktop-toolkit-sync-installer-assets"` to `frontend/package.json` scripts
 - [ ] Added `"desktop-toolkit-updater.exe"` to `bundle.resources` in `frontend/src-tauri/tauri.conf.json`
 - [ ] Pinned `desktop-toolkit` git tag in `frontend/src-tauri/Cargo.toml`
-- [ ] (If using Python) Added `chamber19-desktop-toolkit @ git+…@v2.2.5` to `backend/requirements.txt`
+- [ ] (If using Python) Added `chamber19-desktop-toolkit @ git+…@v2.2.6` to `backend/requirements.txt`
 - [ ] Added `.github/workflows/release.yml` with the preflight step + `GITHUB_TOKEN` auth
 - [ ] Added `permissions: { contents: write, packages: read }` to the release job
 - [ ] Added `.github/workflows/copilot-setup-steps.yml` (optional, for Copilot coding agent)
