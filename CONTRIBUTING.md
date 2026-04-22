@@ -16,10 +16,12 @@ future chamber-19 desktop tools) the next time they bump their pin.
 2. **CI must be green** before merging.
 3. **Merge** via squash or merge commit (no force-push to `main`).
 4. **Tag** a new SemVer release manually after merge:
+
    ```bash
    git tag -a v1.2.3 -m "v1.2.3 — <one-line summary>"
    git push origin v1.2.3
    ```
+
 5. **Consumer tools bump their pin** in a follow-up PR:
    - Python: update the `@v1.2.3` ref in `pyproject.toml`/`requirements.txt`
    - JS: update the version in `package.json`
@@ -29,6 +31,7 @@ future chamber-19 desktop tools) the next time they bump their pin.
 ## Breaking changes
 
 A change is breaking if it:
+
 - Renames or removes a public function, class, or module
 - Changes a function signature in a non-backwards-compatible way
 - Modifies template placeholder names (`${TOOL_*}`, `${PRODUCT_NAME}`)
@@ -53,3 +56,12 @@ Add a migration note to `CHANGELOG.md` explaining what consumers need to change.
 For the full multi-repo overview (how Transmittal-Builder was refactored to
 consume this framework) see:
 [Transmittal Builder CONTRIBUTING.md](https://github.com/chamber-19/transmittal-builder/blob/main/CONTRIBUTING.md)
+
+---
+
+## Documentation policy
+
+This repo enforces a "no stale docs" rule. See
+[`.github/copilot-instructions.md`](./.github/copilot-instructions.md) for
+the full mapping of code-paths-to-docs that must be kept in sync. Human
+contributors are bound by the same rule as the coding agent.
