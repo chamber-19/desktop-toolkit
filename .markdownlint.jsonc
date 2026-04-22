@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DavidAnson/markdownlint/main/schema/markdownlint-config-schema.json",
+  // Allow long lines in tables and code-heavy docs (CHANGELOG, CONSUMING)
+  "MD013": false,
+  // Allow inline HTML used by GitHub-flavoured callouts and <details>
+  "MD033": false,
+  // Permit duplicate headings as long as they are not direct siblings
+  // (CHANGELOG.md uses repeated "### Fixed" / "### Added" under different versions)
+  "MD024": { "siblings_only": true },
+  // Strong-emphasis style: prefer **double asterisks**
+  "MD050": { "style": "asterisk" },
+  // Emphasis style: prefer _underscores_
+  "MD049": { "style": "underscore" },
+  // Permit bare URLs inside angle brackets (used in some doc tables)
+  "MD034": false,
+  // Table column style: not enforced (compact pipe style used throughout)
+  "MD060": false
+}

@@ -59,9 +59,11 @@ them if you create an additional consumer repo.
 > works if the package owner has explicitly granted the consumer repo access.
 
 1. Navigate to:
-   ```
+
+   ```text
    https://github.com/orgs/chamber-19/packages/npm/desktop-toolkit/settings
    ```
+
 2. Scroll to **"Manage Actions access"**.
 3. Click **Add Repository**.
 4. Search for and select your new consumer repo (e.g. `chamber-19/shopvac`).
@@ -207,7 +209,7 @@ Prior to v2.2.5, `installer/nsis/hooks.nsh` used an NSIS `File` directive inside
 Tauri 2's NSIS template invokes `NSIS_HOOK_POSTINSTALL` from a `Function`, not a `Section`.
 NSIS's `File` directive is only valid inside a `Section`, so this produced:
 
-```
+```text
 Error: command File not valid outside Section or Function
 !include: error in script: "...\installer\hooks.nsh" on line 113
 ```
@@ -589,16 +591,19 @@ The `.npmrc` file reads `${NODE_AUTH_TOKEN}` at install time. You must export it
 shell session that runs `npm install`.
 
 **macOS / Linux (bash/zsh — one session):**
+
 ```bash
 export NODE_AUTH_TOKEN=ghp_…
 ```
 
 **Windows PowerShell (one session):**
+
 ```powershell
 $env:NODE_AUTH_TOKEN = "ghp_…"
 ```
 
 **Windows cmd (one session):**
+
 ```cmd
 set NODE_AUTH_TOKEN=ghp_…
 ```
@@ -614,6 +619,7 @@ set NODE_AUTH_TOKEN=ghp_…
 - Windows: add `$env:NODE_AUTH_TOKEN = "ghp_…"` to `$PROFILE`
 
 **VS Code dev container (`.devcontainer/devcontainer.json`):**
+
 ```json
 {
   "remoteEnv": {
@@ -621,9 +627,11 @@ set NODE_AUTH_TOKEN=ghp_…
   }
 }
 ```
+
 This forwards the token from your host environment into the container without committing it.
 
 **direnv (`.envrc` in repo root — add `.envrc` to `.gitignore`):**
+
 ```bash
 # .envrc — loaded by direnv when you cd into the repo
 export NODE_AUTH_TOKEN=ghp_…
@@ -638,7 +646,8 @@ npm ls @chamber-19/desktop-toolkit
 ```
 
 Expected output:
-```
+
+```text
 my-tool-frontend@1.0.0 /path/to/your/repo/frontend
 └── @chamber-19/desktop-toolkit@2.2.6
 ```

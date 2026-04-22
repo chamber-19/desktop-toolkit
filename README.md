@@ -21,7 +21,7 @@ CI workflow setup, local PAT configuration, and a copy-paste-ready checklist.
 
 ## Repository layout
 
-```
+```text
 desktop-toolkit/
 ├── python/
 │   ├── pyproject.toml                 ← Python package manifest
