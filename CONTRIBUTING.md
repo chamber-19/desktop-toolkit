@@ -52,4 +52,4 @@ Add a migration note to `CHANGELOG.md` explaining what consumers need to change.
 
 For the full multi-repo overview (how Transmittal-Builder was refactored to
 consume this framework) see:
-[Transmittal-Builder CONTRIBUTING.md](https://github.com/Koraji95-coder/Transmittal-Builder/blob/main/CONTRIBUTING.md)
+[Transmittal Builder CONTRIBUTING.md](https://github.com/chamber-19/transmittal-builder/blob/main/CONTRIBUTING.md)

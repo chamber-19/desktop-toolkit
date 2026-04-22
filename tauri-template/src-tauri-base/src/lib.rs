@@ -644,7 +644,8 @@ fn spawn_python_backend(child_arc: &Arc<Mutex<Option<Child>>>) {
 ///      [`UpdateState`] (populated by `startup_sequence` on update detect).
 ///   2. Copy the installer from the shared drive to `%TEMP%`, emitting
 ///      `update_progress` and `update_status` events.
-///   3. Locate `desktop-toolkit-updater.exe` next to the running app exe.
+///   3. Locate `desktop-toolkit-updater.exe` under the Tauri resources dir
+///      (falling back to the app exe directory for older builds).
 ///   4. Spawn the shim DETACHED with `--installer`, `--installed-app-exe`,
 ///      `--version`, and `--sidecar-name` args.
 ///   5. Call `app.exit(0)` — releasing the file lock on the parent exe so
@@ -693,23 +694,34 @@ fn start_update(app: tauri::AppHandle, state: tauri::State<UpdateState>) {
             serde_json::json!({ "message": "Closing application…" }),
         );
 
-        // ── 3. Locate the updater shim ────────────────────────────────────
-        let updater_exe = match std::env::current_exe()
-            .ok()
-            .and_then(|p| p.parent().map(|d| d.join("desktop-toolkit-updater.exe")))
-        {
-            Some(p) => p,
-            None => {
-                updater::log_updater("start_update: cannot determine updater exe path");
+        let installed_app_exe = match std::env::current_exe() {
+            Ok(p) => p,
+            Err(e) => {
+                updater::log_updater(&format!("start_update: cannot determine current exe: {e}"));
                 app_clone.exit(1);
                 return;
             }
         };
 
-        let installed_app_exe = match std::env::current_exe() {
-            Ok(p) => p,
-            Err(e) => {
-                updater::log_updater(&format!("start_update: cannot determine current exe: {e}"));
+        // ── 3. Locate the updater shim ────────────────────────────────────
+        let resource_updater_exe = app_clone
+            .path()
+            .resource_dir()
+            .ok()
+            .map(|d| d.join("desktop-toolkit-updater.exe"));
+
+        let updater_exe = resource_updater_exe
+            .filter(|p| p.is_file())
+            .or_else(|| {
+                installed_app_exe
+                    .parent()
+                    .map(|d| d.join("desktop-toolkit-updater.exe"))
+            });
+
+        let updater_exe = match updater_exe {
+            Some(p) => p,
+            None => {
+                updater::log_updater("start_update: cannot determine updater exe path");
                 app_clone.exit(1);
                 return;
             }

@@ -132,7 +132,19 @@ jobs:
           cd ${FRONTEND_DIR}
           npm run build
 
-      # ── 6. Tauri build ───────────────────────────────────────────────────
+      # ── 6. Clean cached bundle outputs ───────────────────────────────────
+      - name: Clean cached NSIS bundle outputs
+        shell: pwsh
+        run: |
+          $bundleDir = "${FRONTEND_DIR}\src-tauri\target\release\bundle\nsis"
+          if (Test-Path $bundleDir) {
+            Remove-Item -Recurse -Force $bundleDir
+            Write-Host "Removed cached NSIS bundle directory: $bundleDir"
+          } else {
+            Write-Host "No cached NSIS bundle directory found at $bundleDir"
+          }
+
+      # ── 7. Tauri build ───────────────────────────────────────────────────
       - name: Build Tauri app (NSIS installer)
         run: |
           cd ${FRONTEND_DIR}
@@ -140,27 +152,40 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ""
 
-      # ── 7. Locate built artefacts ────────────────────────────────────────
+      # ── 8. Locate built artefacts ────────────────────────────────────────
       - name: Locate NSIS installer
         id: find_installer
         run: |
-          $exe = Get-ChildItem -Recurse `
-            "${INSTALLER_GLOB}" |
-            Select-Object -First 1
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          $allInstallers = Get-ChildItem -Path "${INSTALLER_GLOB}" -File
+          if (-not $allInstallers) { throw "NSIS installer not found!" }
+
+          $escapedVersion = [regex]::Escape($version)
+          $versionedInstallers = $allInstallers |
+            Where-Object { $_.Name -match "(^|[^0-9])$escapedVersion([^0-9]|$)" } |
+            Sort-Object LastWriteTimeUtc -Descending
+
+          if ($versionedInstallers) {
+            $exe = $versionedInstallers | Select-Object -First 1
+          } else {
+            Write-Warning "No installer filename matched version $version. Falling back to newest installer by timestamp."
+            $exe = $allInstallers | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+          }
+
           if (-not $exe) { throw "NSIS installer not found!" }
           echo "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
           echo "name=$($exe.Name)"     >> $env:GITHUB_OUTPUT
           Write-Host "Installer: $($exe.FullName)"
         shell: pwsh
 
-      # ── 8. Generate latest.json ──────────────────────────────────────────
+      # ── 9. Generate latest.json ──────────────────────────────────────────
       - name: Generate latest.json
         run: node build-scripts/generate-latest-json.mjs
         env:
           INSTALLER_NAME: ${{ steps.find_installer.outputs.name }}
           TAG_NAME:       ${{ github.ref_name }}
 
-      # ── 9. Create GitHub Release ─────────────────────────────────────────
+      # ── 10. Create GitHub Release ────────────────────────────────────────
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:

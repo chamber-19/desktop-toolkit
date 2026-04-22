@@ -20,7 +20,7 @@ use std::path::PathBuf;
 
 use semver::Version;
 use serde::Deserialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -270,14 +270,26 @@ pub fn start_update(
         }
     };
 
-    let updater_exe = std::env::current_exe()
-        .map_err(|e| e.to_string())?
-        .parent()
-        .ok_or("no parent dir")?
-        .join("desktop-toolkit-updater.exe");
-
     let installed_app_exe =
         std::env::current_exe().map_err(|e| e.to_string())?;
+
+    let resource_updater_exe = app
+        .path()
+        .resource_dir()
+        .map_err(|e| e.to_string())?
+        .join("desktop-toolkit-updater.exe");
+
+    // Primary contract (v2.2.5+): Tauri installs the shim under resources/
+    // via bundle.resources. Fall back to the app directory for older builds
+    // that still promote the shim next to the main exe during install.
+    let updater_exe = if resource_updater_exe.is_file() {
+        resource_updater_exe
+    } else {
+        installed_app_exe
+            .parent()
+            .ok_or("no parent dir")?
+            .join("desktop-toolkit-updater.exe")
+    };
 
     // Copy installer to %TEMP% first (in the parent process where the drive is reachable).
     log_updater(log_dir, &format!("start_update: copying {} from shared drive", latest.installer));
