@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Publish workflow now automatically creates a GitHub Release page entry
+  when a version tag is pushed, with auto-generated release notes listing
+  merged PRs between tags. Previously Release page entries had to be
+  created manually after each tag push.
+
+## [2.2.7] — 2026-04-24
+
 ### Fixed
 
 - Updater shim now passes the correct silent-install flag to NSIS (`/S` instead
