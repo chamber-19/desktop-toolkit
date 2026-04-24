@@ -551,7 +551,7 @@ dependencies = [
 
 [[package]]
 name = "desktop-toolkit"
-version = "2.2.7"
+version = "2.2.8"
 dependencies = [
  "semver",
  "serde",
@@ -561,7 +561,7 @@ dependencies = [
 
 [[package]]
 name = "desktop-toolkit-updater"
-version = "2.2.7"
+version = "2.2.8"
 dependencies = [
  "windows-sys 0.59.0",
 ]

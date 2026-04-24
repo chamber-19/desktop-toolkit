@@ -94,7 +94,7 @@ auth setup, file templates, CI workflow, and the complete bootstrap checklist.
 
 ```toml
 # In your tool's pyproject.toml or requirements.txt
-chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v2.2.6#subdirectory=python
+chamber19-desktop-toolkit @ git+https://github.com/chamber-19/desktop-toolkit@v2.2.8#subdirectory=python
 ```
 
 **Usage:**

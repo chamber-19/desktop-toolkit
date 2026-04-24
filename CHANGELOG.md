@@ -6,12 +6,36 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+## [2.2.8] — 2026-04-24
+
 ### Changed
 
 - Publish workflow now automatically creates a GitHub Release page entry
   when a version tag is pushed, with auto-generated release notes listing
   merged PRs between tags. Previously Release page entries had to be
   created manually after each tag push.
+
+### Fixed
+
+- **Installer/uninstaller title bar previously rendered as " — Setup" (blank app
+  name).** `hooks.nsh` used `Caption "${PRODUCTNAME} — Setup"` and
+  `UninstallCaption "${PRODUCTNAME} — Uninstaller"`, but Tauri's NSIS template
+  `!include`s `hooks.nsh` before emitting `!define PRODUCTNAME`, so
+  `${PRODUCTNAME}` expanded to the empty string at include time. Fixed by
+  replacing both with the runtime `$(^Name)` token, which NSIS resolves from the
+  later `Name "${PRODUCTNAME}"` statement at install-time. Originally surfaced and
+  patched downstream in `chamber-19/transmittal-builder` v6.2.4 — absorbed
+  upstream so consumers no longer need a local `hooks.nsh` override for this.
+  (Cross-reference: chamber-19/transmittal-builder#103.)
+
+- **`NSIS_HOOK_POSTINSTALL` comment now definitively documents that no consumer
+  action is required.** The previous comment described the v2.2.4 → v2.2.5
+  migration context but left open whether a `CopyFiles` workaround was still
+  needed. Investigation of `crates/desktop-toolkit/src/updater.rs` confirms the
+  shim is resolved via `app.path().resource_dir().join("desktop-toolkit-updater.exe")`
+  (i.e. `<INSTDIR>\resources\desktop-toolkit-updater.exe`) — exactly where Tauri
+  places it via `bundle.resources`. No `CopyFiles` or manual promotion to
+  `$INSTDIR` is needed.
 
 ## [2.2.7] — 2026-04-24
 

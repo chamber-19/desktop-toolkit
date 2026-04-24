@@ -34,8 +34,18 @@
 ; ─────────────────────────────────────────────────────────────────────────
 
 ; ── Title-bar captions ────────────────────────────────────────────────────
-Caption          "${PRODUCTNAME} — Setup"
-UninstallCaption "${PRODUCTNAME} — Uninstaller"
+; Tauri's NSIS template `!include`s this file BEFORE it emits
+; `!define PRODUCTNAME`, so immediate NSIS commands here cannot safely use
+; `${PRODUCTNAME}` — it would expand to the empty string. Use the runtime
+; `$(^Name)` token instead; NSIS resolves it from the later
+; `Name "${PRODUCTNAME}"` statement in installer.nsi at install-time, so
+; the installer/uninstaller title bar shows the app name correctly.
+;
+; The `${PRODUCTNAME}` references in MUI_TEXT_* / MUI_UNTEXT_* `!define`s
+; below are fine because MUI emits the page text AFTER `!define PRODUCTNAME`
+; has run.
+Caption          "$(^Name) — Setup"
+UninstallCaption "$(^Name) — Uninstaller"
 
 ; ── Installer: INSTFILES page headers ─────────────────────────────────────
 !define MUI_TEXT_INSTALLING_TITLE                "Installing ${PRODUCTNAME}"
@@ -107,18 +117,17 @@ UninstallCaption "${PRODUCTNAME} — Uninstaller"
   !insertmacro _KillAppProcesses
 !macroend
 
-; ── Post-install hook: (no-op — shim is bundled via tauri.conf.json bundle.resources) ─
-; As of v2.2.5, the desktop-toolkit-updater shim is no longer bundled here via a
-; NSIS `File` directive. Tauri 2 invokes `NSIS_HOOK_POSTINSTALL` from a Function
-; context, where `File` is not valid (NSIS only allows `File` inside a Section).
+; ── Post-install hook: (no-op — shim is found automatically via resource_dir()) ──────────────
+; As of v2.2.5, the desktop-toolkit-updater shim is bundled by Tauri into
+; `<INSTDIR>\resources\desktop-toolkit-updater.exe` via `bundle.resources`.
+; The Rust updater (`crates/desktop-toolkit/src/updater.rs`, `start_update`)
+; resolves the shim with `app.path().resource_dir().join("desktop-toolkit-updater.exe")`,
+; which maps exactly to that path. No POSTINSTALL action is required — no
+; `CopyFiles`, no `File` directive, no manual promotion to `$INSTDIR`.
 ;
-; Instead, consumers must list `desktop-toolkit-updater.exe` in their
-; `tauri.conf.json` → `bundle.resources` array. Tauri's bundler then copies the
-; shim to `<INSTDIR>\resources\desktop-toolkit-updater.exe` during packaging.
-;
-; CI workflow: build the shim with `cargo build --release -p desktop-toolkit-updater`
-; and copy `target\release\desktop-toolkit-updater.exe` to `frontend\src-tauri\`
-; before running `tauri build`.
+; A compatibility fallback to `$INSTDIR\desktop-toolkit-updater.exe` (next to
+; the main exe) is present in the Rust lookup for pre-v2.2.5 installs, but
+; new builds do not need to populate that path.
 ;
 ; See docs/CONSUMING.md — "Updater shim integration" for the full setup.
 !macro NSIS_HOOK_POSTINSTALL
