@@ -37,13 +37,30 @@ This repo is at the **root of the dependency tree for Tauri-based tools** — `l
 
 Use the `memory` MCP server to recall and update these as decisions evolve. Current state:
 
-1. **Publishing channel is GitHub Packages (npm) + git tags (Rust, Python).** Not npmjs.com, not PyPI, not crates.io. The rationale for each is in `docs/V1.1.0_PLAN.md` (historical) and `docs/CONSUMING.md` (current).
-2. **Consumers authenticate with a `read:packages` PAT.** GitHub Packages requires auth even for public scoped packages. This is documented in `docs/CONSUMING.md` and is not negotiable on GitHub's side.
-3. **All three packages (npm, Rust crate, Python) share the same version number and bump together.** This is enforced by the version-bump checklist below and smoke-tested by CI.
+1. **Publishing channel is GitHub Packages (npm) + git tags (Rust, Python).** Not npmjs.com, not PyPI, not crates.io. Rationale is in `docs/V1.1.0_PLAN.md` (historical) and `docs/CONSUMING.md` (current).
+2. **Consumers authenticate with a `read:packages` PAT.** GitHub Packages requires auth even for public scoped packages. Documented in `docs/CONSUMING.md`; not negotiable on GitHub's side.
+3. **All three packages (npm, Rust crate, Python) share the same version number and bump together.** Enforced by the version-bump checklist below and smoke-tested by CI.
 4. **The updater shim ships via `bundle.resources`, not NSIS `File` directive.** This is the v2.2.5+ contract documented in `docs/CONSUMING.md` § "Updater shim integration." Consumers on v2.2.4 or earlier have a different integration path.
 5. **`installer/nsis/hooks.nsh` must be byte-identical at the repo root and at `js/packages/desktop-toolkit/installer/nsis/hooks.nsh`.** The `hooks-nsh-in-sync` CI job enforces this.
 
-When making a decision that affects another repo or that future sessions need to respect, persist it to memory.
+### Memory server scope — what to persist
+
+Use `memory` for persistent cross-session context. What belongs there vs. what doesn't:
+
+**Persist to memory:**
+- Architectural decisions and their rationale (e.g. "GitHub Packages is the publishing channel because git-subpath npm installs are broken in pacote")
+- Version-pin contracts between repos (e.g. "transmittal-builder v6.x expects desktop-toolkit ^2.2.5+")
+- Repo role changes (e.g. "shopvac was renamed to launcher on <date>")
+- Naming conventions that have been deliberately chosen (e.g. "AutoCAD commands use bare names, no `CH19` prefix")
+- Recurring traps documented in past PRs (e.g. "don't disable `hooks-nsh-in-sync`, it catches real drift")
+
+**Do NOT persist:**
+- Per-PR context (PR title, branch name, transient commit hashes)
+- Debugging state from a single session
+- File contents — re-read files when needed, don't cache them in memory
+- Anything you could infer by reading current files in the repo
+
+When in doubt, prefer to re-read the repo over trusting stale memory. Memory is for the shape of decisions, not the substance of code.
 
 ---
 
@@ -53,7 +70,7 @@ When making a decision that affects another repo or that future sessions need to
 
 - **Match the style already in the file.** Don't introduce a new formatting convention in a repo that has a consistent one.
 - **Be concise.** Comments explain *why*, not *what*.
-- **No scope creep.** If asked to fix a bug, fix the bug. Don't also refactor the surrounding code unless explicitly asked.
+- **No scope creep.** If asked to fix a bug, fix the bug. Don't also refactor surrounding code unless explicitly asked.
 - **Prefer editing over rewriting.** Produce minimal diffs.
 
 ### Response style in chat
@@ -80,7 +97,7 @@ This repo has three workflow files, and each has specific responsibilities. Befo
 **`.github/workflows/ci.yml`** — runs on every PR and push. Enforces:
 - `python` job: Python package builds, smoke imports pass, no leftover `transmittal` references in spec template
 - `js` job: exports map is valid, every JSX/JS entry parses under esbuild
-- `tauri-template-render` job: template renders with dummy values and `cargo check` passes (this is the big one — it catches template-level breakage before consumers discover it)
+- `tauri-template-render` job: template renders with dummy values and `cargo check` passes (catches template-level breakage before consumers discover it)
 - `workflow-template-yaml` job: the release template parses as valid YAML
 - `install-script-syntax` job: shell + Node + PowerShell syntax checks on `build-scripts/`
 - `lockfile-integrity-guard` job: any committed lockfile matches `package.json`
@@ -102,13 +119,13 @@ This repo has three workflow files, and each has specific responsibilities. Befo
 
 This repo has MCP servers configured via the GitHub coding agent settings. Use them actively.
 
-- **`github`**: preferred for anything on github.com. Use `create_issue`, `create_pull_request`, `create_branch`, `list_workflow_runs`, `get_workflow_run` directly rather than asking the user.
-- **`git`**: local repo operations. Use read operations (`git_status`, `git_diff`, `git_log`, `git_blame`) freely. Never use destructive operations (`git_reset`, `git_clean`, force-push equivalents) without explicit confirmation.
+- **`github`**: preferred for anything on github.com. Use `create_or_update_file`, `push_files`, and `delete_file` for direct commits instead of going through the `git` server when the change is narrow and well-scoped. Use `list_workflow_jobs` + `download_workflow_run_logs` to diagnose specific CI job failures. Use `list_secret_scanning_alerts` and `list_code_scanning_alerts` when reviewing security posture or assessing dependency-bump PRs.
+- **`git`**: local repo operations. Use read operations (`git_status`, `git_diff`, `git_log`, `git_blame`) freely. Use `git` for multi-file changes that need careful staging. Never use destructive operations (`git_reset`, `git_clean`, force-push equivalents) without explicit confirmation.
 - **`filesystem`** (scoped to `/workspaces`): read and write files in the current repo. Don't write outside the repo directory. Prefer `github.get_file_contents` when reading files from a *different* Chamber 19 repo.
 - **`fetch`**: non-GitHub URLs only.
 - **`sequential-thinking`**: use for any plan with 3+ dependent steps, especially cross-repo work or multi-step CI debugging.
-- **`memory`**: persist architectural decisions and cross-repo relationships. Read at session start before asking the user to re-explain context.
-- **`time`**: use for CHANGELOG entry timestamps and release notes. Don't guess dates.
+- **`memory`**: persist architectural decisions and cross-repo relationships. Read at session start before asking the user to re-explain context. Follow the "Memory server scope" guidance above — don't pollute it with transient state.
+- **`time`**: use for CHANGELOG entry dates, release tags, and any ISO-formatted timestamp. Do not guess the current date from memory — always fetch it via this server.
 - **`svgmaker`**: for generating or editing SVG icons. Match the Chamber 19 design system (warm neutral backgrounds, copper `#C4884D` accent, flat / geometric / single-weight strokes).
 
 ---
@@ -156,7 +173,7 @@ Shared visual language across all Chamber 19 tools:
 
 ### CHANGELOG
 
-Follows Keep a Changelog conventions. Every release tag has a corresponding entry. Unreleased changes accumulate under `## [Unreleased]` and get promoted at release time.
+Follows Keep a Changelog conventions. Every release tag has a corresponding entry. Unreleased changes accumulate under `## [Unreleased]` and get promoted at release time. Full rules in the repo-specific section below.
 
 ---
 
@@ -175,6 +192,15 @@ Follows Keep a Changelog conventions. Every release tag has a corresponding entr
 - Release PRs (anything that changes a version field) should contain *only* version changes, CHANGELOG promotion, and required docs updates.
 - PR description includes what changed, why, and any follow-up needed.
 
+### Draft PRs
+
+Open a PR as draft when:
+- The PR is part of a multi-repo coordinated change and downstream verification is pending in `launcher` or `transmittal-builder`
+- CI feedback is wanted on a partial change before final commits
+- A release is staged but should not be merged until all dependent consumers are ready
+
+Convert to ready-for-review only once the coordinated flow is complete.
+
 ---
 
 ## Security
@@ -183,6 +209,7 @@ Follows Keep a Changelog conventions. Every release tag has a corresponding entr
 - `.env` files must be in `.gitignore`
 - MCP configs reference env variable names, never literal tokens
 - When auditing dependency bump PRs, check for unexpected maintainer changes on popular packages (supply-chain attack vector)
+- Use `github.list_secret_scanning_alerts` and `github.list_code_scanning_alerts` to review open security alerts before major releases
 
 ---
 
@@ -265,9 +292,27 @@ Additional version-bump requirements:
 - Update `docs/CONSUMING.md` examples that reference the previous version number
 - Update the three `name=` code block filenames in `docs/CONSUMING.md` if they reference the version
 - Promote `## [Unreleased]` entries to `## [X.Y.Z] — YYYY-MM-DD` in `CHANGELOG.md`
-- Use the `time` MCP server for the release date, don't guess
+- Use the `time` MCP server for the release date — do not guess it
 
-## 5. CI guards you must not bypass
+## 5. Changelog hygiene
+
+Every user-facing change requires an entry in `CHANGELOG.md` under the `## [Unreleased]` heading, categorized using Keep a Changelog conventions: `Added`, `Changed`, `Fixed`, `Deprecated`, `Removed`, or `Security`.
+
+"User-facing" means anything a downstream consumer would notice:
+
+- Behavior changes in any shipped API (npm exports, Rust crate public items, Python package exports)
+- New exports or public functions
+- Bug fixes in shipped APIs
+- Bumped minimum versions (Node, Rust, Python)
+- NSIS hook behavior changes
+- Updater shim path or invocation changes
+- Template output changes that affect consumer-generated files
+
+Internal-only changes (CI tweaks, repo tooling, doc typo fixes, refactors with no API impact) do NOT require a changelog entry. When in doubt, add one — unnecessary entries are cheap; missing ones break consumer trust.
+
+Release PRs promote `[Unreleased]` entries to a new `## [x.y.z] — YYYY-MM-DD` heading. Use the `time` MCP server to get the current date — do not guess it.
+
+## 6. CI guards you must not bypass
 
 These CI jobs exist because specific bugs shipped before the guard was added. Do not disable, skip, or work around any of them:
 
@@ -278,7 +323,7 @@ These CI jobs exist because specific bugs shipped before the guard was added. Do
 
 If a guard is failing, debug the underlying cause. Never "fix" a CI failure by removing the check.
 
-## 6. Reference docs
+## 7. Reference docs
 
 - [`docs/CONSUMING.md`](../docs/CONSUMING.md) — consumer onboarding (must always reflect the latest released version)
 - [`CHANGELOG.md`](../CHANGELOG.md) — every user-visible change, in Keep a Changelog format
