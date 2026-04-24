@@ -42,12 +42,14 @@ Use the `memory` MCP server to recall and update these as decisions evolve. Curr
 3. **All three packages (npm, Rust crate, Python) share the same version number and bump together.** Enforced by the version-bump checklist below and smoke-tested by CI.
 4. **The updater shim ships via `bundle.resources`, not NSIS `File` directive.** This is the v2.2.5+ contract documented in `docs/CONSUMING.md` § "Updater shim integration." Consumers on v2.2.4 or earlier have a different integration path.
 5. **`installer/nsis/hooks.nsh` must be byte-identical at the repo root and at `js/packages/desktop-toolkit/installer/nsis/hooks.nsh`.** The `hooks-nsh-in-sync` CI job enforces this.
+6. **GitHub Packages versions are immutable.** A bad release cannot be yanked cleanly. Always fix forward with a new patch version rather than trying to recall a published one.
 
 ### Memory server scope — what to persist
 
 Use `memory` for persistent cross-session context. What belongs there vs. what doesn't:
 
 **Persist to memory:**
+
 - Architectural decisions and their rationale (e.g. "GitHub Packages is the publishing channel because git-subpath npm installs are broken in pacote")
 - Version-pin contracts between repos (e.g. "transmittal-builder v6.x expects desktop-toolkit ^2.2.5+")
 - Repo role changes (e.g. "shopvac was renamed to launcher on <date>")
@@ -55,6 +57,7 @@ Use `memory` for persistent cross-session context. What belongs there vs. what d
 - Recurring traps documented in past PRs (e.g. "don't disable `hooks-nsh-in-sync`, it catches real drift")
 
 **Do NOT persist:**
+
 - Per-PR context (PR title, branch name, transient commit hashes)
 - Debugging state from a single session
 - File contents — re-read files when needed, don't cache them in memory
@@ -95,16 +98,18 @@ Actively push back when the user:
 This repo has three workflow files, and each has specific responsibilities. Before making changes, know which CI job will catch what:
 
 **`.github/workflows/ci.yml`** — runs on every PR and push. Enforces:
+
 - `python` job: Python package builds, smoke imports pass, no leftover `transmittal` references in spec template
 - `js` job: exports map is valid, every JSX/JS entry parses under esbuild
-- `tauri-template-render` job: template renders with dummy values and `cargo check` passes (catches template-level breakage before consumers discover it)
+- `tauri-template-render` job: template renders with dummy values and `cargo check` passes. This is the job that catches `Cargo.lock` drift, because `cargo check` fails on a stale lockfile
 - `workflow-template-yaml` job: the release template parses as valid YAML
 - `install-script-syntax` job: shell + Node + PowerShell syntax checks on `build-scripts/`
-- `lockfile-integrity-guard` job: any committed lockfile matches `package.json`
+- `lockfile-integrity-guard` job: verifies the committed JS lockfile (`js/packages/desktop-toolkit/package-lock.json`) matches `package.json`. **Does NOT check `Cargo.lock`** — that's covered by `tauri-template-render`
 - `hooks-nsh-in-sync` job: root and inner `hooks.nsh` are byte-identical
 - `fresh-consumer-install` job (tag pushes only): proves the published npm package actually installs and all declared exports resolve from a clean consumer project
 
 **`.github/workflows/publish.yml`** — runs on `v[0-9]+.[0-9]+.[0-9]+` tag pushes. Enforces:
+
 - Tag matches `js/packages/desktop-toolkit/package.json` version (fails fast if not)
 - Publishes `@chamber-19/desktop-toolkit` to GitHub Packages
 - Does NOT publish pre-release tags (the regex excludes `-rc.*`, `-beta`, etc.)
@@ -173,7 +178,7 @@ Shared visual language across all Chamber 19 tools:
 
 ### CHANGELOG
 
-Follows Keep a Changelog conventions. Every release tag has a corresponding entry. Unreleased changes accumulate under `## [Unreleased]` and get promoted at release time. Full rules in the repo-specific section below.
+Follows Keep a Changelog conventions. Every release tag has a corresponding entry. Unreleased changes accumulate under `## [Unreleased]` and get promoted at release time. Full rules in the repo-specific section below (Rule 5).
 
 ---
 
@@ -195,6 +200,7 @@ Follows Keep a Changelog conventions. Every release tag has a corresponding entr
 ### Draft PRs
 
 Open a PR as draft when:
+
 - The PR is part of a multi-repo coordinated change and downstream verification is pending in `launcher` or `transmittal-builder`
 - CI feedback is wanted on a partial change before final commits
 - A release is staged but should not be merged until all dependent consumers are ready
@@ -220,7 +226,7 @@ When a change here affects downstream consumers:
 1. Use `sequential-thinking` to plan the order of operations
 2. Cut the toolkit release first (tag, publish, verify GitHub Packages shows the new version)
 3. Then bump consumer pins in their repos (`transmittal-builder`, `launcher`) — separate PRs, one per consumer
-4. If the consumer bump reveals a problem, fix forward in the toolkit (new patch version) rather than yanking
+4. If the consumer bump reveals a problem, **fix forward** in the toolkit with a new patch version rather than yanking. GitHub Packages versions are immutable; a published bad release cannot be cleanly recalled, only superseded
 5. Update memory with the cross-repo relationship
 
 ---
@@ -251,7 +257,7 @@ Stale documentation has caused production incidents in this project. Every PR yo
 | `installer/nsis/hooks.nsh` | `docs/CONSUMING.md` § "NSIS hooks" and `js/packages/desktop-toolkit/installer/nsis/hooks.nsh` (must remain byte-identical — enforced by `hooks-nsh-in-sync` CI job) |
 | `.github/workflows/release-tauri-sidecar-app.yml.template` | `docs/CONSUMING.md` § "CI release workflow" and any consumer-facing examples |
 | `build-scripts/publish-to-drive.ps1` | `docs/CONSUMING.md` and the consumer's own `RELEASING.md` |
-| Anything user-facing in behaviour | `CHANGELOG.md` under `## [Unreleased]` |
+| Any user-facing behavior change | `CHANGELOG.md` — see Rule 5 for what "user-facing" means |
 
 If a PR changes code but leaves a doc inconsistent, the PR is incomplete. Either update the doc in the same PR, or open a tracking issue **before** merging and link it from the PR description.
 
@@ -270,7 +276,7 @@ Canonical example in this repo: `docs/V1.1.0_PLAN.md`. Another example from acro
 
 All `*.md` files must pass `markdownlint-cli2 "**/*.md"` against the rules in `.markdownlint.jsonc`. In short:
 
-- Fenced code blocks: declare a language (`text` for ASCII, never bare)
+- Fenced code blocks: always declare a language. Use `text` for prose, ASCII art, or shell session output — never a bare block
 - Use `_emphasis_` and `**strong**` consistently
 - Surround headings, lists, and fenced blocks with blank lines
 - First line of every file is a `#` H1; archival callouts go below it
@@ -283,9 +289,13 @@ When bumping the toolkit version, all three package versions must change in the 
 2. `crates/desktop-toolkit/Cargo.toml` AND `crates/desktop-toolkit-updater/Cargo.toml` → `version`
 3. `python/pyproject.toml` → `version`
 
-Then run `cargo update -p desktop-toolkit -p desktop-toolkit-updater` to refresh `Cargo.lock`. The `lockfile-integrity-guard` CI job verifies this.
+Then run `cargo update -p desktop-toolkit -p desktop-toolkit-updater` to refresh `Cargo.lock`.
 
-The `publish.yml` workflow additionally verifies that the pushed tag matches `package.json` version before publishing — this is the last-line defense against a mismatched release.
+CI coverage for this bump:
+
+- **JS lockfile drift** → `lockfile-integrity-guard` job catches this
+- **Rust lockfile drift** → `tauri-template-render` job catches this (via `cargo check`'s lockfile validation)
+- **Tag-vs-package-json mismatch** → `publish.yml`'s first step catches this before publishing
 
 Additional version-bump requirements:
 
@@ -318,7 +328,7 @@ These CI jobs exist because specific bugs shipped before the guard was added. Do
 
 - **`hooks-nsh-in-sync`** — catches the case where only one copy of `hooks.nsh` gets updated
 - **`fresh-consumer-install`** — catches the npm-package-arg subpath bug (the v1.0.1 incident)
-- **`tauri-template-render`** — catches broken template substitutions before consumers hit them
+- **`tauri-template-render`** — catches broken template substitutions before consumers hit them, plus `Cargo.lock` drift
 - **Tag-matches-version check in `publish.yml`** — catches out-of-sync releases
 
 If a guard is failing, debug the underlying cause. Never "fix" a CI failure by removing the check.
