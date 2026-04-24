@@ -116,7 +116,9 @@ fn main() {
             }
         }
         Err(e) => {
-            log_shim(&format!("shim: failed to spawn installer: {e}"));
+            let msg = format!("shim: failed to spawn installer: {e}");
+            log_shim(&msg);
+            show_update_error(&msg);
         }
     }
 
