@@ -93,7 +93,12 @@ UninstallCaption "${PRODUCTNAME} — Uninstaller"
 ; this file in your tool's repo and add the appropriate taskkill lines.
 !macro _KillAppProcesses
   nsExec::Exec 'taskkill /F /IM "${MAINBINARYNAME}.exe" /T'
-  nsExec::Exec 'taskkill /F /IM "desktop-toolkit-updater.exe" /T'
+  ; DO NOT kill desktop-toolkit-updater.exe during install.
+  ; The shim is the process that is actively running THIS installer
+  ; and waiting on it with child.wait(). Killing the shim mid-install
+  ; orphans the update flow and prevents the post-install relaunch.
+  ; If the shim ever needs killing defensively, do it in a separate
+  ; recovery path, NOT in the pre-install hook.
   Sleep 2000
 !macroend
 
