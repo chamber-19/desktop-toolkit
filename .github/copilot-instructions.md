@@ -35,7 +35,7 @@ This repo is at the **root of the dependency tree for Tauri-based tools** — `l
 
 ### Architectural decisions that persist across sessions
 
-Use the `memory` MCP server to recall and update these as decisions evolve. Current state:
+Use GitHub Copilot Memory (visible at Repo Settings → Copilot → Memory) to recall and update these as decisions evolve. Current state:
 
 1. **Publishing channel is GitHub Packages (npm) + git tags (Rust, Python).** Not npmjs.com, not PyPI, not crates.io. Rationale is in `docs/V1.1.0_PLAN.md` (historical) and `docs/CONSUMING.md` (current).
 2. **Consumers authenticate with a `read:packages` PAT.** GitHub Packages requires auth even for public scoped packages. Documented in `docs/CONSUMING.md`; not negotiable on GitHub's side.
@@ -44,26 +44,27 @@ Use the `memory` MCP server to recall and update these as decisions evolve. Curr
 5. **`installer/nsis/hooks.nsh` must be byte-identical at the repo root and at `js/packages/desktop-toolkit/installer/nsis/hooks.nsh`.** The `hooks-nsh-in-sync` CI job enforces this.
 6. **GitHub Packages versions are immutable.** A bad release cannot be yanked cleanly. Always fix forward with a new patch version rather than trying to recall a published one.
 
-### Memory server scope — what to persist
+### Memory scope — what to persist
 
-Use `memory` for persistent cross-session context. What belongs there vs. what doesn't:
+GitHub Copilot Memory is enabled on this repo. Memories persist across sessions, are repo-scoped, tagged by agent and model, and auto-expire. The user can review and curate them at Repo Settings → Copilot → Memory.
 
-**Persist to memory:**
+**Persist to Copilot Memory:**
 
-- Architectural decisions and their rationale (e.g. "GitHub Packages is the publishing channel because git-subpath npm installs are broken in pacote")
-- Version-pin contracts between repos (e.g. "transmittal-builder v6.x expects desktop-toolkit ^2.2.5+")
-- Repo role changes (e.g. "shopvac was renamed to launcher on <date>")
-- Naming conventions that have been deliberately chosen (e.g. "AutoCAD commands use bare names, no `CH19` prefix")
-- Recurring traps documented in past PRs (e.g. "don't disable `hooks-nsh-in-sync`, it catches real drift")
+- Repo-specific discoveries that aren't in this instructions file (e.g. "Cargo.lock regeneration here also requires `cargo update -p desktop-toolkit-updater`, not just `-p desktop-toolkit`")
+- Deviations from documented conventions (e.g. "this repo uses X where `docs/CONSUMING.md` implies Y")
+- Recurring traps that cost time to discover (e.g. "don't disable `hooks-nsh-in-sync`, it catches real drift")
+- In-flight decisions that span multiple sessions
 
-**Do NOT persist:**
+**Do NOT persist to memory:**
 
+- Architectural decisions that belong in this instructions file (they're more durable there, and they load every session)
+- Cross-repo context that applies family-wide (belongs in this file's shared section)
 - Per-PR context (PR title, branch name, transient commit hashes)
 - Debugging state from a single session
 - File contents — re-read files when needed, don't cache them in memory
 - Anything you could infer by reading current files in the repo
 
-When in doubt, prefer to re-read the repo over trusting stale memory. Memory is for the shape of decisions, not the substance of code.
+When in doubt, prefer to re-read the repo over trusting stale memory. Memory is for repo-specific discoveries, not the shape of permanent decisions — those go in this file.
 
 ---
 
@@ -129,7 +130,6 @@ This repo has MCP servers configured via the GitHub coding agent settings. Use t
 - **`filesystem`** (scoped to `/workspaces`): read and write files in the current repo. Don't write outside the repo directory. Prefer `github.get_file_contents` when reading files from a *different* Chamber 19 repo.
 - **`fetch`**: non-GitHub URLs only.
 - **`sequential-thinking`**: use for any plan with 3+ dependent steps, especially cross-repo work or multi-step CI debugging.
-- **`memory`**: persist architectural decisions and cross-repo relationships. Read at session start before asking the user to re-explain context. Follow the "Memory server scope" guidance above — don't pollute it with transient state.
 - **`time`**: use for CHANGELOG entry dates, release tags, and any ISO-formatted timestamp. Do not guess the current date from memory — always fetch it via this server.
 - **`svgmaker`**: for generating or editing SVG icons. Match the Chamber 19 design system (warm neutral backgrounds, copper `#C4884D` accent, flat / geometric / single-weight strokes).
 
@@ -227,13 +227,13 @@ When a change here affects downstream consumers:
 2. Cut the toolkit release first (tag, publish, verify GitHub Packages shows the new version)
 3. Then bump consumer pins in their repos (`transmittal-builder`, `launcher`) — separate PRs, one per consumer
 4. If the consumer bump reveals a problem, **fix forward** in the toolkit with a new patch version rather than yanking. GitHub Packages versions are immutable; a published bad release cannot be cleanly recalled, only superseded
-5. Update memory with the cross-repo relationship
+5. If the relationship or decision is repo-specific (e.g. a new version pin contract), persist it to Copilot Memory. If it's family-wide, the user will update the instructions file.
 
 ---
 
 ## When you don't know
 
-- Check `memory` first
+- Check Copilot Memory first (repo-specific discoveries and recurring traps live there)
 - Then check `docs/CONSUMING.md`, `CHANGELOG.md`, `README.md`, `CONTRIBUTING.md`
 - Then search across the five Chamber 19 repos via the `github` server
 - Only then ask the user — and when you ask, ask a specific question
