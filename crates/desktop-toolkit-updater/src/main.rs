@@ -65,8 +65,11 @@ fn main() {
         log_shim(&format!("shim: killing sidecar {sidecar}.exe"));
         #[cfg(windows)]
         {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
             let _ = Command::new("taskkill")
                 .args(["/F", "/IM", &format!("{sidecar}.exe"), "/T"])
+                .creation_flags(CREATE_NO_WINDOW)
                 .status();
         }
         // Give Windows time to release file handles on the sidecar directory.
@@ -83,7 +86,7 @@ fn main() {
     }
 
     let mut cmd = Command::new(&installer);
-    cmd.args(["/PASSIVE", "/NORESTART"]);
+    cmd.args(["/S"]);
 
     match cmd.spawn() {
         Ok(mut child) => {
@@ -98,18 +101,24 @@ fn main() {
                     if status.success() {
                         relaunch_app(&installed_app_exe, &version);
                     } else {
-                        log_shim(&format!(
+                        let msg = format!(
                             "shim: installer failed (exit code {code}), not relaunching"
-                        ));
+                        );
+                        log_shim(&msg);
+                        show_update_error(&msg);
                     }
                 }
                 Err(e) => {
-                    log_shim(&format!("shim: wait() failed: {e}"));
+                    let msg = format!("shim: wait() failed: {e}");
+                    log_shim(&msg);
+                    show_update_error(&msg);
                 }
             }
         }
         Err(e) => {
-            log_shim(&format!("shim: failed to spawn installer: {e}"));
+            let msg = format!("shim: failed to spawn installer: {e}");
+            log_shim(&msg);
+            show_update_error(&msg);
         }
     }
 
@@ -123,6 +132,17 @@ fn relaunch_app(installed_app_exe: &str, version: &str) {
     std::thread::sleep(Duration::from_millis(500));
 
     let new_exe = PathBuf::from(installed_app_exe);
+
+    // Verify install actually placed the new binary where we expect.
+    if !new_exe.is_file() {
+        let msg = format!(
+            "shim: expected binary not found at {new_exe:?} after install — update likely failed"
+        );
+        log_shim(&msg);
+        show_update_error(&msg);
+        return;
+    }
+
     log_shim(&format!("shim: relaunching {new_exe:?} (version {version})"));
 
     let mut relaunch = Command::new(&new_exe);
@@ -139,7 +159,9 @@ fn relaunch_app(installed_app_exe: &str, version: &str) {
             log_shim(&format!("shim: relaunched (PID {})", child.id()));
         }
         Err(e) => {
-            log_shim(&format!("shim: relaunch failed: {e}"));
+            let msg = format!("shim: relaunch failed: {e}");
+            log_shim(&msg);
+            show_update_error(&msg);
         }
     }
 }
@@ -187,3 +209,38 @@ fn log_shim(msg: &str) {
     // Also print to stderr so the parent process can capture it during testing.
     eprintln!("{msg}");
 }
+
+// ── Error dialog (Windows) ────────────────────────────────────────────────
+
+#[cfg(windows)]
+fn show_update_error(msg: &str) {
+    use std::ffi::OsStr;
+    use std::os::windows::ffi::OsStrExt;
+
+    let full_msg = format!(
+        "{msg}\n\nCheck the updater log at:\n%LOCALAPPDATA%\\desktop-toolkit-updater\\updater.log"
+    );
+
+    let body: Vec<u16> = OsStr::new(&full_msg)
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let title: Vec<u16> = OsStr::new("Update Failed")
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+
+    // SAFETY: passing valid null-terminated UTF-16 strings to a Windows API.
+    unsafe {
+        // MB_OK = 0x0, MB_ICONERROR = 0x10
+        windows_sys::Win32::UI::WindowsAndMessaging::MessageBoxW(
+            std::ptr::null_mut(),
+            body.as_ptr(),
+            title.as_ptr(),
+            0x0 | 0x10,
+        );
+    }
+}
+
+#[cfg(not(windows))]
+fn show_update_error(_msg: &str) {}

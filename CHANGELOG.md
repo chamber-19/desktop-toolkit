@@ -6,6 +6,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Fixed
+
+- Updater shim now passes the correct silent-install flag to NSIS (`/S` instead
+  of the invalid `/PASSIVE`). Previously, updates silently failed because NSIS
+  does not recognize the Windows Installer `/PASSIVE` flag and would either
+  bail out or fall back to interactive mode.
+- `hooks.nsh` no longer kills `desktop-toolkit-updater.exe` during
+  `NSIS_HOOK_PREINSTALL`. The shim is the process running the installer and
+  waiting on its completion — killing it mid-install orphaned the update flow
+  and prevented the post-install relaunch.
+- Shim now verifies the installed binary exists at the expected path before
+  attempting relaunch, and surfaces a Windows error dialog if any step of the
+  update flow fails, so failures are no longer silent.
+- `taskkill` spawned from the shim now uses `CREATE_NO_WINDOW` to suppress
+  the brief console flash users previously saw during updates.
+
 ## [2.2.6] — 2026-04-22
 
 ### Fixed
@@ -88,6 +104,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
   **Permanent fix:** `installer/nsis/hooks.nsh` now uses only macros
   that Tauri injects automatically into the NSIS context:
+
   - `${PRODUCT_NAME}` → `${PRODUCTNAME}` (Tauri-provided)
   - `${TOOL_SIDECAR_NAME}.exe` taskkill entry removed — child sidecars
     are reaped automatically by the OS when the parent Tauri process
@@ -124,9 +141,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   icon validator requires RGBA (4-channel) and proc-macro-panics at
   compile time otherwise:
   > `icon /tmp/.../icons/32x32.png is not RGBA`
-  CI now generates icon stubs via ImageMagick with the `PNG32:` prefix
-  (which forces RGBA output), and asserts the channel count via
-  `identify` before `cargo check` runs.
+  > CI now generates icon stubs via ImageMagick with the `PNG32:` prefix
+  > (which forces RGBA output), and asserts the channel count via
+  > `identify` before `cargo check` runs.
 
 ### Notes
 
@@ -247,17 +264,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - **`crates/desktop-toolkit/`** — Published Rust library crate consumable via
-  `cargo add` or git-URL pinning.  Lifts `splash.rs`, `updater.rs`,
+  `cargo add` or git-URL pinning. Lifts `splash.rs`, `updater.rs`,
   `sidecar.rs`, and `log.rs` from the v2.0.0 scaffolding template into a
-  proper crate.  All tool-specific values (`sidecar_name`, `app_identifier`,
+  proper crate. All tool-specific values (`sidecar_name`, `app_identifier`,
   `current_version`, `log_dir`) are accepted at runtime; no `${TOOL_*}`
   placeholders remain in the published crate.
 
 - **`crates/desktop-toolkit-updater/`** — Separate updater shim binary
   (`desktop-toolkit-updater.exe`) that handles the entire upgrade flow as an
-  independent process.  Accepts `--installer`, `--installed-app-exe`,
+  independent process. Accepts `--installer`, `--installed-app-exe`,
   `--version`, and `--sidecar-name` CLI args; kills the sidecar, waits on the
-  NSIS installer, and relaunches the new app version.  Ships as part of the
+  NSIS installer, and relaunches the new app version. Ships as part of the
   Cargo workspace so consumers can build it locally or consume a pre-built
   artifact from CI.
 
@@ -275,15 +292,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 
-- **Critical — auto-updater no longer fails silently.**  The v2.0.0 design
+- **Critical — auto-updater no longer fails silently.** The v2.0.0 design
   blocked the parent process on `child.wait()` while the NSIS installer tried
-  to replace the parent's own `.exe`.  NSIS cannot replace a locked file, so
+  to replace the parent's own `.exe`. NSIS cannot replace a locked file, so
   the install silently failed: the progress window appeared, status messages
   cycled, the app died from the NSIS `taskkill` hook, and the version never
-  changed.  v2.1.0 delegates the entire upgrade flow to the separate
-  `desktop-toolkit-updater.exe` shim.  The parent app copies the installer to
+  changed. v2.1.0 delegates the entire upgrade flow to the separate
+  `desktop-toolkit-updater.exe` shim. The parent app copies the installer to
   `%TEMP%`, spawns the shim as `DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP`,
-  and immediately calls `app.exit(0)` to release all file locks.  The shim
+  and immediately calls `app.exit(0)` to release all file locks. The shim
   survives the parent's exit, waits on NSIS, and relaunches the new version.
 
 - `start_update` in `tauri-template/src-tauri-base/src/lib.rs` no longer calls
@@ -340,7 +357,7 @@ Consumers (e.g. Transmittal Builder) should:
    ```
 
 3. **NSIS / installer assets** — Add `desktop-toolkit-sync-installer-assets`
-   to the `prebuild` npm script.  Add synced files to `.gitignore`.  Ensure
+   to the `prebuild` npm script. Add synced files to `.gitignore`. Ensure
    CI builds `desktop-toolkit-updater.exe` and places it in
    `frontend/src-tauri/` before running `tauri build`.
 
@@ -430,7 +447,7 @@ Consumers (e.g. Transmittal Builder) should:
 
 - Repo transfer from `Koraji95-coder/kc-framework` to `chamber-19/desktop-toolkit` completed as Phase 3 (manual step). `GITHUB_TOKEN` in this repo can now natively publish to the `@chamber-19` npm scope on GitHub Packages.
 
-## [1.0.1] - 2026-04-18
+## [1.0.1] — 2026-04-18
 
 ### Fixed
 
@@ -440,7 +457,7 @@ Consumers (e.g. Transmittal Builder) should:
 
 - Added a root `package.json` declaring `js/packages/*` as npm workspaces so that consumers can install the JS package via `git+https://...#v1.0.1&path:js/packages/kc-framework` without npm silently mangling the install. Removes the need for downstream consumers to vendor the package.
 
-## [1.0.0] - 2025-01-01
+## [1.0.0] — 2025-01-01
 
 ### Added
 

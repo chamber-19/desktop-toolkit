@@ -1,6 +1,6 @@
 [package]
 name = "desktop-toolkit-updater"
-version = "2.2.6"
+version = "2.2.7"
 description = "desktop-toolkit updater shim — separate process that handles silent-install upgrades"
 authors = ["Koraji"]
 license = "MIT"
@@ -12,3 +12,6 @@ publish = false
 [[bin]]
 name = "desktop-toolkit-updater"
 path = "src/main.rs"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.59", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
