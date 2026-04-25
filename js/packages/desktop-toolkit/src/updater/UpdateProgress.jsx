@@ -46,6 +46,9 @@ function formatBytes(n) {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+// en-space  em-dash  en-space — typographic separator between bytes and percent.
+const PROGRESS_SEPARATOR = "\u2002\u2014\u2002";
+
 // ── Phase metadata ───────────────────────────────────────────────────────────
 
 const PHASE_LABELS = {
@@ -65,7 +68,8 @@ const PHASE_SUBLABELS = {
 // ── Component ────────────────────────────────────────────────────────────────
 
 export function UpdateProgress({ phase }) {
-  const version = phase.t !== "error" ? (phase.version ?? "") : "";
+  // version is present in all phase shapes (including error — passed through from the previous phase).
+  const version = phase.version ?? "";
 
   // ── Error state ───────────────────────────────────────────────────────────
   if (phase.t === "error") {
@@ -132,11 +136,12 @@ export function UpdateProgress({ phase }) {
         <span className="updater-phase-label">{label}</span>
       </div>
 
-      {/* Byte detail: only shown during downloading when total is known */}
-      {phase.t === "downloading" && phase.totalBytes > 0 && (
+      {/* Byte detail: shown for all of downloading phase; placeholder when size is unknown */}
+      {phase.t === "downloading" && (
         <div className="updater-download-detail">
-          {formatBytes(phase.bytesCopied)} / {formatBytes(phase.totalBytes)}
-          {"\u2002\u2014\u2002"}{Math.round(phase.percent ?? 0)}%
+          {phase.totalBytes > 0
+            ? `${formatBytes(phase.bytesCopied)} / ${formatBytes(phase.totalBytes)}${PROGRESS_SEPARATOR}${Math.round(phase.percent ?? 0)}%`
+            : "Calculating\u2026"}
         </div>
       )}
 

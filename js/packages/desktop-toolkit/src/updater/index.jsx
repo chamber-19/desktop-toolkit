@@ -34,6 +34,11 @@ import { UpdateModal } from "../components/UpdateModal/UpdateModal";
 import { UpdateProgress } from "./UpdateProgress";
 import "./updater.css";
 
+// Phases that carry a version string — used to preserve version on transitions.
+const PHASES_WITH_VERSION = new Set([
+  "available", "downloading", "verifying", "installing", "launching",
+]);
+
 export function Updater() {
   /**
    * Phase discriminated union.  Possible shapes:
@@ -76,7 +81,7 @@ export function Updater() {
       if (next === "verifying" || next === "installing" || next === "launching") {
         setPhase((prev) => ({
           t:       next,
-          version: prev.t !== "error" && prev.t !== "checking" ? (prev.version ?? "") : "",
+          version: PHASES_WITH_VERSION.has(prev.t) ? (prev.version ?? "") : "",
         }));
       }
     });
@@ -116,6 +121,7 @@ export function Updater() {
         failedPhase: prev.t !== "error" ? prev.t : "downloading",
         message,
         logPath,
+        version:     PHASES_WITH_VERSION.has(prev.t) ? (prev.version ?? "") : "",
       }));
     });
   };
