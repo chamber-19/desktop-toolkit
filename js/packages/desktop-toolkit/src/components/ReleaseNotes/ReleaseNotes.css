@@ -1,0 +1,168 @@
+/* ReleaseNotes.css — Markdown-rendered release notes within the update UI.
+ *
+ * Design system:
+ *   Body text  : DM Sans
+ *   h1, h2     : Instrument Serif (display)
+ *   h3+        : DM Sans
+ *   Links      : copper #C4884D
+ *   Background : transparent (inherits modal / progress window bg)
+ */
+
+.release-notes {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #a89070;
+  background: transparent;
+}
+
+/* ── Headings ─────────────────────────────────────────────────────────── */
+
+.release-notes h1,
+.release-notes h2 {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-weight: 400;
+  color: #f0dcc0;
+  margin: 0.9rem 0 0.35rem;
+  line-height: 1.25;
+}
+
+.release-notes h1 { font-size: 1.15rem; }
+.release-notes h2 { font-size: 1rem; }
+
+.release-notes h3,
+.release-notes h4,
+.release-notes h5,
+.release-notes h6 {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 600;
+  color: #d4b888;
+  margin: 0.75rem 0 0.3rem;
+  line-height: 1.3;
+}
+
+.release-notes h3 { font-size: 0.9rem; }
+.release-notes h4 { font-size: 0.85rem; }
+.release-notes h5,
+.release-notes h6 { font-size: 0.8rem; }
+
+/* Remove top margin from the very first heading/paragraph */
+.release-notes > :first-child {
+  margin-top: 0;
+}
+
+/* ── Paragraphs ──────────────────────────────────────────────────────── */
+
+.release-notes p {
+  margin: 0 0 0.6rem;
+}
+
+/* ── Lists ───────────────────────────────────────────────────────────── */
+
+.release-notes ul,
+.release-notes ol {
+  margin: 0 0 0.6rem;
+  padding-left: 1.4rem;
+}
+
+.release-notes li {
+  margin-bottom: 0.2rem;
+}
+
+.release-notes li:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Links ───────────────────────────────────────────────────────────── */
+
+.release-notes a {
+  color: #C4884D;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.release-notes a:hover {
+  color: #d9a45a;
+}
+
+/* ── Inline code ─────────────────────────────────────────────────────── */
+
+.release-notes code {
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace;
+  font-size: 0.8em;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  padding: 0.1em 0.35em;
+  color: #c8c0b0;
+}
+
+/* ── Code blocks ─────────────────────────────────────────────────────── */
+
+.release-notes pre {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  padding: 0.65rem 0.9rem;
+  overflow-x: auto;
+  margin: 0 0 0.6rem;
+}
+
+.release-notes pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8125rem;
+  color: #c8c0b0;
+}
+
+/* ── Blockquotes ─────────────────────────────────────────────────────── */
+
+.release-notes blockquote {
+  border-left: 3px solid #C4884D;
+  margin: 0 0 0.6rem;
+  padding: 0.25rem 0 0.25rem 0.85rem;
+  color: #907860;
+  font-style: italic;
+}
+
+.release-notes blockquote p {
+  margin: 0;
+}
+
+/* ── Horizontal rule ─────────────────────────────────────────────────── */
+
+.release-notes hr {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0.75rem 0;
+}
+
+/* ── Strong / emphasis ───────────────────────────────────────────────── */
+
+.release-notes strong {
+  color: #d4b888;
+  font-weight: 600;
+}
+
+.release-notes em {
+  font-style: italic;
+}
+
+/* ── Fallback message ─────────────────────────────────────────────────── */
+
+.release-notes-fallback {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.875rem;
+  color: #a89070;
+  margin: 0;
+}
+
+.release-notes-fallback-link {
+  color: #C4884D;
+  text-underline-offset: 2px;
+}
+
+.release-notes-fallback-link:hover {
+  color: #d9a45a;
+}

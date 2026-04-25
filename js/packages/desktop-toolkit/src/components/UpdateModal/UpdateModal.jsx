@@ -11,10 +11,11 @@
  *
  * Props:
  *   version   {string}    — semantic version string, e.g. "6.2.0"
- *   notes     {string|null} — release notes text (optional)
+ *   notes     {string|null} — release notes markdown text (optional)
  *   onInstall {function}  — called when the user clicks Install Now
  */
 
+import { ReleaseNotes } from "../ReleaseNotes/ReleaseNotes";
 import "./UpdateModal.css";
 
 export function UpdateModal({ version = "", notes = null, onInstall }) {
@@ -58,7 +59,7 @@ export function UpdateModal({ version = "", notes = null, onInstall }) {
             </p>
           )}
           {notes && (
-            <p className="update-modal-notes">{notes}</p>
+            <ReleaseNotes notes={notes} className="update-modal-notes" />
           )}
           <p className="update-modal-message">
             This update is required to continue using the application.

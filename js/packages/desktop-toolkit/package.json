@@ -9,12 +9,17 @@
     "./splash": "./src/splash/index.jsx",
     "./updater": "./src/updater/index.jsx",
     "./components/UpdateModal": "./src/components/UpdateModal/UpdateModal.jsx",
+    "./components/ReleaseNotes": "./src/components/ReleaseNotes/ReleaseNotes.jsx",
     "./utils/version": "./src/utils/version.js"
   },
   "bin": {
     "desktop-toolkit-sync-installer-assets": "./build-scripts/sync-installer-assets.mjs"
   },
   "files": ["src", "build-scripts", "installer"],
+  "dependencies": {
+    "dompurify": "^3.4.1",
+    "marked": "^18.0.2"
+  },
   "peerDependencies": {
     "react": ">=18",
     "react-dom": ">=18"

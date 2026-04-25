@@ -20,6 +20,7 @@ import { createRoot } from "react-dom/client";
 import { listen, emit } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 import { UpdateModal } from "../components/UpdateModal/UpdateModal";
+import { ReleaseNotes } from "../components/ReleaseNotes/ReleaseNotes";
 import "./updater.css";
 
 // ── Initial status shown while start_update runs ─────────────────────────
@@ -132,7 +133,7 @@ export function Updater() {
 
       {/* Release notes */}
       {notes && (
-        <div className="updater-notes">{notes}</div>
+        <ReleaseNotes notes={notes} className="updater-notes" />
       )}
 
       {/* Version metadata footer */}

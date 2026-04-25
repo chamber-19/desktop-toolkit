@@ -57,11 +57,14 @@
   margin: 0 0 0.5rem;
 }
 
+/* .update-modal-notes scopes the ReleaseNotes component inside the modal:
+   constrains max-height and adds scroll so very long release notes don't
+   overflow the dialog. Typography is owned by ReleaseNotes.css. */
 .update-modal-notes {
-  font-size: 0.875rem;
-  color: #a89070;
+  max-height: 160px;
+  overflow-y: auto;
   margin: 0 0 0.75rem;
-  line-height: 1.5;
+  padding-right: 4px;
 }
 
 .update-modal-message {
