@@ -16,6 +16,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   `docs/CONSUMING.md` § "Window flash prevention" for the migration pattern.
   Without this call the main window will remain invisible after upgrading.
 
+- Update modal now renders release notes as formatted markdown (headers,
+  bullets, links) instead of plain text showing raw markdown syntax. A new
+  `ReleaseNotes` component (`@chamber-19/desktop-toolkit/components/ReleaseNotes`)
+  handles parsing via `marked` and sanitization via `DOMPurify`. Headings use
+  Instrument Serif (h1/h2) and DM Sans (h3+); links use copper `#C4884D`;
+  background is transparent to inherit the modal/progress-window bg. Graceful
+  degradation: empty or unparseable notes render nothing.
+
 ### Added
 
 - `@chamber-19/desktop-toolkit/window/showOnReady` export: two helpers that
