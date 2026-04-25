@@ -299,6 +299,9 @@ pub fn start_update(
             e
         })?;
 
+    // Signal the frontend: copy done, now verifying installer integrity.
+    let _ = app.emit("update_phase", serde_json::json!({ "phase": "verifying" }));
+
     log_updater(log_dir, &format!("start_update: spawning shim {:?}", updater_exe));
 
     let mut cmd = std::process::Command::new(&updater_exe);
@@ -323,6 +326,9 @@ pub fn start_update(
         e.to_string()
     })?;
 
+    // Signal the frontend: shim is running, NSIS installer is executing.
+    let _ = app.emit("update_phase", serde_json::json!({ "phase": "installing" }));
+
     log_updater(
         log_dir,
         &format!(
@@ -330,6 +336,9 @@ pub fn start_update(
             child.id()
         ),
     );
+
+    // Signal the frontend: app is about to exit, new version launching next.
+    let _ = app.emit("update_phase", serde_json::json!({ "phase": "launching" }));
 
     // Brief pause so the OS finishes handing off, then exit cleanly.
     // app.exit() releases file handles — NSIS can now replace the exe.

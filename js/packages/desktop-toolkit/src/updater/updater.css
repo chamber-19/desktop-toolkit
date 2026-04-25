@@ -102,7 +102,7 @@
   position: relative;
 }
 
-/* Amber gradient fill — bolt-silhouette inspired */
+/* Determinate: copper gradient fill */
 .updater-progress-fill {
   height: 100%;
   background: linear-gradient(90deg, #C8823A 0%, #ffcc66 50%, #C8823A 100%);
@@ -135,7 +135,62 @@
   100% { left: 110%; opacity: 0; }
 }
 
-/* ── Status text ─────────────────────────────────────────────────────────── */
+/* Indeterminate: sweeping copper block */
+.updater-progress-indeterminate {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent 0%, #C8823A 40%, #ffcc66 60%, transparent 100%);
+  border-radius: 3px;
+  animation: indeterminate-sweep 1.6s ease-in-out infinite;
+}
+
+@keyframes indeterminate-sweep {
+  0%   { left: -45%; }
+  100% { left: 105%; }
+}
+
+/* ── Phase indicator (spinner + label row) ───────────────────────────────── */
+.updater-phase-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Spinner: rotating ring using border trick */
+.updater-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(196, 136, 77, 0.25);
+  border-top-color: #C4884D;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.updater-phase-label {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: rgba(196, 136, 77, 0.9);
+  letter-spacing: 0.04em;
+}
+
+/* ── Byte/percent detail for downloading phase ───────────────────────────── */
+.updater-download-detail {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: rgba(156, 163, 175, 0.75);
+  letter-spacing: 0.02em;
+}
+
+/* ── Status text (contextual hint) ──────────────────────────────────────── */
 .updater-status {
   font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
   font-size: 11px;
@@ -158,6 +213,63 @@
   line-height: 1.5;
 }
 
+/* ── Error block ─────────────────────────────────────────────────────────── */
+.updater-error-block {
+  width: 100%;
+  max-width: 360px;
+  background: rgba(184, 92, 92, 0.08);
+  border: 1px solid rgba(184, 92, 92, 0.35);
+  border-radius: 6px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.updater-error-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d97777;
+  letter-spacing: 0.03em;
+}
+
+.updater-error-phase {
+  font-size: 11px;
+  color: rgba(156, 163, 175, 0.8);
+}
+
+.updater-error-phase-name {
+  color: rgba(196, 136, 77, 0.9);
+}
+
+.updater-error-message {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  color: rgba(217, 119, 119, 0.85);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.updater-error-log {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 2px;
+}
+
+.updater-error-log-label {
+  font-size: 10px;
+  color: rgba(107, 114, 128, 0.8);
+  letter-spacing: 0.04em;
+}
+
+.updater-error-logpath {
+  font-family: ui-monospace, 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 10px;
+  color: rgba(156, 163, 175, 0.7);
+  word-break: break-all;
+}
+
 /* ── Footer metadata ─────────────────────────────────────────────────────── */
 .updater-footer {
   font-size: 10px;
@@ -168,7 +280,15 @@
 
 /* ── Accessibility: prefers-reduced-motion ──────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
-  .updater-progress-fill::after {
+  .updater-progress-fill::after,
+  .updater-progress-indeterminate,
+  .updater-spinner {
     animation: none !important;
+  }
+
+  .updater-progress-indeterminate {
+    left: 0;
+    width: 100%;
+    opacity: 0.4;
   }
 }

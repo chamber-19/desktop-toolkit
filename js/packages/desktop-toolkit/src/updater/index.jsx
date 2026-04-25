@@ -1,17 +1,27 @@
 /**
  * updater/index.jsx — Force-update window.
  *
- * This window serves two sequential phases:
+ * Implements a six-phase update state machine:
  *
- *   1. **Confirmation** — `UpdateModal` is shown when `update_info` arrives
- *      from Rust.  The user must click **Install Now** to proceed.
+ *   checking → available → downloading → verifying → installing → launching
  *
- *   2. **Progress** — After confirmation the `start_update` Rust command is
- *      invoked.  It copies the installer from the shared drive to `%TEMP%`
- *      and emits `update_progress` (percent) and `update_status` (text)
- *      events that drive the branded progress bar below.
+ * plus a terminal error state.
  *
- * The user cannot cancel at either phase — this is intentional per the
+ * Phase is modelled as a discriminated union on `phase.t` — not a soup of
+ * booleans.  Post-confirmation transitions are driven by `update_phase` Tauri
+ * events emitted from `start_update` on the Rust side:
+ *
+ *   update_phase  { phase: "verifying" | "installing" | "launching" }
+ *
+ * Download progress uses real byte counts from `update_progress` events
+ * emitted by `copy_installer_with_progress` during the shared-drive copy —
+ * these are actual bytes, not time-based estimates.
+ *
+ * Error handling: if `start_update` rejects, the error is shown with the
+ * failing phase name, the error message, and the app log directory path
+ * resolved at runtime via `@tauri-apps/api/path`.
+ *
+ * The user cannot cancel at any phase — this is intentional per the
  * mandatory-update product spec.
  */
 
@@ -19,38 +29,56 @@ import { StrictMode, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { listen, emit } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import { appLogDir } from "@tauri-apps/api/path";
 import { UpdateModal } from "../components/UpdateModal/UpdateModal";
+import { UpdateProgress } from "./UpdateProgress";
 import "./updater.css";
 
-// ── Initial status shown while start_update runs ─────────────────────────
-const STATUS_CLOSING = "Closing application…";
 export function Updater() {
-  // "waiting" → initial state before update_info arrives
-  // "modal"   → UpdateModal is visible, user must confirm
-  // "progress"→ start_update has been invoked, progress bar is active
-  const [phase, setPhase]     = useState("waiting");
-  const [version, setVersion] = useState("");
-  const [notes, setNotes]     = useState(null);
-  const [percent, setPercent] = useState(0);
-  const [status, setStatus]   = useState(STATUS_CLOSING);
+  /**
+   * Phase discriminated union.  Possible shapes:
+   *   { t: "checking" }
+   *   { t: "available",   version: string, notes: string|null }
+   *   { t: "downloading", version: string, bytesCopied: number, totalBytes: number, percent: number }
+   *   { t: "verifying",   version: string }
+   *   { t: "installing",  version: string }
+   *   { t: "launching",   version: string }
+   *   { t: "error",       failedPhase: string, message: string, logPath: string|null }
+   */
+  const [phase, setPhase] = useState({ t: "checking" });
 
   useEffect(() => {
-    // Receive version / notes → switch to confirmation modal.
+    // update_info: version + notes arrive from Rust — show confirmation modal.
     const unlisten1 = listen("update_info", (ev) => {
-      setVersion(ev.payload?.version ?? "");
-      setNotes(ev.payload?.notes ?? null);
-      setPhase("modal");
+      setPhase({
+        t:       "available",
+        version: ev.payload?.version ?? "",
+        notes:   ev.payload?.notes   ?? null,
+      });
     });
 
-    // Receive copy-progress events emitted by start_update.
+    // update_progress: real byte-level download progress during shared-drive copy.
     const unlisten2 = listen("update_progress", (ev) => {
-      const p = ev.payload?.percent ?? 0;
-      setPercent(p);
+      setPhase((prev) => {
+        if (prev.t !== "downloading") return prev;
+        return {
+          ...prev,
+          bytesCopied: ev.payload?.bytes_copied ?? 0,
+          totalBytes:  ev.payload?.total_bytes  ?? 0,
+          percent:     ev.payload?.percent       ?? 0,
+        };
+      });
     });
 
-    // Receive human-readable status text emitted by start_update.
-    const unlisten3 = listen("update_status", (ev) => {
-      setStatus(ev.payload?.message ?? "");
+    // update_phase: Rust signals entry into verifying / installing / launching.
+    const unlisten3 = listen("update_phase", (ev) => {
+      const next = ev.payload?.phase;
+      if (next === "verifying" || next === "installing" || next === "launching") {
+        setPhase((prev) => ({
+          t:       next,
+          version: prev.t !== "error" && prev.t !== "checking" ? (prev.version ?? "") : "",
+        }));
+      }
     });
 
     // Signal Rust that all listeners are registered; safe to emit update_info.
@@ -65,82 +93,58 @@ export function Updater() {
     };
   }, []);
 
-  // ── Install Now handler ───────────────────────────────────────────────
+  // ── Install Now handler ───────────────────────────────────────────────────
   const handleInstall = () => {
-    setPhase("progress");
-    setStatus(STATUS_CLOSING);
-    invoke("start_update").catch((e) => {
-      console.error("[updater] start_update failed:", e);
+    setPhase((prev) => ({
+      t:           "downloading",
+      version:     prev.t === "available" ? prev.version : "",
+      bytesCopied: 0,
+      totalBytes:  0,
+      percent:     0,
+    }));
+
+    invoke("start_update").catch(async (e) => {
+      const message = typeof e === "string" ? e : String(e ?? "Unknown error");
+      let logPath = null;
+      try {
+        logPath = await appLogDir();
+      } catch {
+        // best-effort; log path may be unavailable in dev builds
+      }
+      setPhase((prev) => ({
+        t:           "error",
+        failedPhase: prev.t !== "error" ? prev.t : "downloading",
+        message,
+        logPath,
+      }));
     });
   };
 
-  // ── Phase: waiting for update_info ───────────────────────────────────
-  if (phase === "waiting") {
+  // ── Phase: checking ───────────────────────────────────────────────────────
+  if (phase.t === "checking") {
     return (
       <div className="updater-root">
-        <div className="updater-status">Checking for updates…</div>
+        <div className="updater-phase-indicator">
+          <span className="updater-spinner" aria-hidden="true" />
+          <span className="updater-phase-label">Checking for updates\u2026</span>
+        </div>
       </div>
     );
   }
 
-  // ── Phase: confirmation modal ─────────────────────────────────────────
-  if (phase === "modal") {
+  // ── Phase: available (confirmation modal) ─────────────────────────────────
+  if (phase.t === "available") {
     return (
       <UpdateModal
-        version={version}
-        notes={notes}
+        version={phase.version}
+        notes={phase.notes}
         onInstall={handleInstall}
       />
     );
   }
 
-  // ── Phase: progress view ──────────────────────────────────────────────
-  return (
-    <div className="updater-root">
-      {/* Anvil mark */}
-      <div className="updater-logo" role="img" aria-label="Anvil mark">
-        <svg viewBox="72 104 374 380" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style={{ width: "100%", height: "100%" }}>
-          <rect x="86" y="104" width="340" height="86" rx="10" fill="#fff"/>
-          <rect x="226" y="190" width="60" height="170" fill="#fff"/>
-          <path d="M 72,360 H 412 L 446,374 L 446,396 L 412,410 H 72 Z" fill="#fff"/>
-          <rect x="98" y="410" width="316" height="14" fill="#fff"/>
-          <path d="M 196,424 H 316 L 304,452 H 208 Z" fill="#fff"/>
-          <rect x="128" y="452" width="256" height="32" rx="4" fill="#fff"/>
-        </svg>
-      </div>
-
-      {/* Title */}
-      <div className="updater-title-block">
-        <div className="updater-title">
-          {version ? `Updating to v${version}` : "Updating…"}
-        </div>
-        <div className="updater-subtitle">
-          Please wait. Do not close this window.
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="updater-progress-track">
-        <div
-          className="updater-progress-fill"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-
-      {/* Status text */}
-      <div className="updater-status">{status}</div>
-
-      {/* Release notes */}
-      {notes && (
-        <div className="updater-notes">{notes}</div>
-      )}
-
-      {/* Version metadata footer */}
-      <div className="updater-footer">
-        {version ? `v${version}` : ""}
-      </div>
-    </div>
-  );
+  // ── Phases: downloading / verifying / installing / launching / error ──────
+  return <UpdateProgress phase={phase} />;
 }
 
 export function mountUpdater(rootElement = document.getElementById("root")) {

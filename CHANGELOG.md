@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Update modal now shows multi-phase progress (checking → downloading →
+  verifying → installing → launching) with a status message and progress
+  indicator for each phase. Errors surface the failing phase clearly with
+  a link to the updater log. Download progress uses real byte counts from
+  the shared-drive copy — not a time-based estimate.
+
 ## [2.2.8] — 2026-04-24
 
 ### Changed
