@@ -80,7 +80,7 @@ export function ReleaseNotes({ notes, fallbackUrl = null, className = "" }) {
         <a
           href={fallbackUrl}
           target="_blank"
-          rel="noreferrer noopener"
+          rel="noreferrer"
           className="release-notes-fallback-link"
         >
           release notes on GitHub
