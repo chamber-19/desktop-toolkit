@@ -144,6 +144,9 @@
 }
 
 /* ── Release notes ───────────────────────────────────────────────────────── */
+/* .updater-notes scopes the ReleaseNotes component in the progress view:
+   constrains dimensions and provides the scroll container.
+   Typography is owned by ReleaseNotes.css. */
 .updater-notes {
   width: 100%;
   max-width: 360px;
@@ -151,11 +154,8 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 6px;
   padding: 10px 14px;
-  font-size: 11px;
-  color: rgba(156, 163, 175, 0.8);
   max-height: 72px;
   overflow-y: auto;
-  line-height: 1.5;
 }
 
 /* ── Footer metadata ─────────────────────────────────────────────────────── */
