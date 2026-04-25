@@ -85,6 +85,7 @@ jobs:
             src/utils/version.js \
             src/splash/index.jsx \
             src/updater/index.jsx \
+            src/window/showOnReady.jsx \
             --bundle \
             --external:react \
             --external:react-dom \

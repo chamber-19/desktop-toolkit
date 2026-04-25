@@ -1,0 +1,24 @@
+/**
+ * main.jsx — React entry point for ${TOOL_PRODUCT_NAME}.
+ *
+ * The main window is configured with `visible: false` in tauri.conf.json so
+ * that users never see the blank WebView background before React renders.
+ * `showOnReady()` reveals it after the first committed paint.
+ *
+ * DO NOT remove the `showOnReady()` call — the window will stay invisible
+ * forever without it.
+ */
+
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { showOnReady } from "@chamber-19/desktop-toolkit/window/showOnReady";
+import App from "./App.jsx";
+
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+// Reveal the main window after the React tree has committed its first frame.
+showOnReady();
