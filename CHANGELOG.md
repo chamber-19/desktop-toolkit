@@ -6,21 +6,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
-### Changed
+## [2.3.0] — 2026-04-25
 
-- Update modal now shows multi-phase progress (checking → downloading →
-  verifying → installing → launching) with a status message and progress
-  indicator for each phase. Errors surface the failing phase clearly with
-  a link to the updater log. Download progress uses real byte counts from
-  the shared-drive copy — not a time-based estimate.
-  
-- Main window now uses `visible: false` by default and is revealed only after
-  the React root has rendered its first frame. Window background color set to
-  `#1C1B19` to match the design system, preventing a white flash in the brief
-  moment before JS takes over. Consumer apps must call the new `showOnReady()`
-  helper (or `useShowOnReady` hook) from their frontend entry point — see
-  `docs/CONSUMING.md` § "Window flash prevention" for the migration pattern.
-  Without this call the main window will remain invisible after upgrading.
+### Changed
 
 - Update modal now renders release notes as formatted markdown (headers,
   bullets, links) instead of plain text showing raw markdown syntax. A new
@@ -29,6 +17,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
   Instrument Serif (h1/h2) and DM Sans (h3+); links use copper `#C4884D`;
   background is transparent to inherit the modal/progress-window bg. Graceful
   degradation: empty or unparseable notes render nothing.
+
+- Update modal now shows multi-phase progress (checking → downloading →
+  verifying → installing → launching) with a status message and progress
+  indicator for each phase. Errors surface the failing phase clearly with
+  a link to the updater log. Download progress uses real byte counts from
+  the shared-drive copy — not a time-based estimate.
+
+- Main window now uses `visible: false` by default and is revealed only after
+  the React root has rendered its first frame. Window background color set to
+  `#1C1B19` to match the design system, preventing a white flash in the brief
+  moment before JS takes over. Consumer apps must call the new `showOnReady()`
+  helper (or `useShowOnReady` hook) from their frontend entry point — see
+  `docs/CONSUMING.md` § "Window flash prevention" for the migration pattern.
+  Without this call the main window will remain invisible after upgrading.
 
 ### Added
 
