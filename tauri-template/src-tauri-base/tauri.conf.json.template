@@ -21,7 +21,8 @@
         "minWidth": 960,
         "minHeight": 600,
         "dragDropEnabled": false,
-        "visible": false
+        "visible": false,
+        "backgroundColor": "#1C1B19"
       },
       {
         "label": "updater",

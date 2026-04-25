@@ -9,7 +9,8 @@
     "./splash": "./src/splash/index.jsx",
     "./updater": "./src/updater/index.jsx",
     "./components/UpdateModal": "./src/components/UpdateModal/UpdateModal.jsx",
-    "./utils/version": "./src/utils/version.js"
+    "./utils/version": "./src/utils/version.js",
+    "./window/showOnReady": "./src/window/showOnReady.jsx"
   },
   "bin": {
     "desktop-toolkit-sync-installer-assets": "./build-scripts/sync-installer-assets.mjs"

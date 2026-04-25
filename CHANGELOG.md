@@ -6,6 +6,24 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Main window now uses `visible: false` by default and is revealed only after
+  the React root has rendered its first frame. Window background color set to
+  `#1C1B19` to match the design system, preventing a white flash in the brief
+  moment before JS takes over. Consumer apps must call the new `showOnReady()`
+  helper (or `useShowOnReady` hook) from their frontend entry point — see
+  `docs/CONSUMING.md` § "Window flash prevention" for the migration pattern.
+  Without this call the main window will remain invisible after upgrading.
+
+### Added
+
+- `@chamber-19/desktop-toolkit/window/showOnReady` export: two helpers that
+  reveal the Tauri main window after the first React paint.
+  - `showOnReady()` — imperative; call after `createRoot().render()`.
+  - `useShowOnReady()` — React hook; call at the root of your component tree.
+  Both are no-ops outside a Tauri context (e.g. Vite dev in a browser).
+
 ## [2.2.8] — 2026-04-24
 
 ### Changed
