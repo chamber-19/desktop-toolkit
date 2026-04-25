@@ -8,6 +8,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Changed
 
+- Update modal now shows multi-phase progress (checking → downloading →
+  verifying → installing → launching) with a status message and progress
+  indicator for each phase. Errors surface the failing phase clearly with
+  a link to the updater log. Download progress uses real byte counts from
+  the shared-drive copy — not a time-based estimate.
+  
 - Main window now uses `visible: false` by default and is revealed only after
   the React root has rendered its first frame. Window background color set to
   `#1C1B19` to match the design system, preventing a white flash in the brief
