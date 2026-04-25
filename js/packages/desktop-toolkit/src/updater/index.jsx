@@ -34,26 +34,14 @@ import { UpdateModal } from "../components/UpdateModal/UpdateModal";
 import { UpdateProgress } from "./UpdateProgress";
 import "./updater.css";
 
-// Phases that carry a version string — used to preserve version on transitions.
 const PHASES_WITH_VERSION = new Set([
   "available", "downloading", "verifying", "installing", "launching",
 ]);
 
 export function Updater() {
-  /**
-   * Phase discriminated union.  Possible shapes:
-   *   { t: "checking" }
-   *   { t: "available",   version: string, notes: string|null }
-   *   { t: "downloading", version: string, bytesCopied: number, totalBytes: number, percent: number }
-   *   { t: "verifying",   version: string }
-   *   { t: "installing",  version: string }
-   *   { t: "launching",   version: string }
-   *   { t: "error",       failedPhase: string, message: string, logPath: string|null }
-   */
   const [phase, setPhase] = useState({ t: "checking" });
 
   useEffect(() => {
-    // update_info: version + notes arrive from Rust — show confirmation modal.
     const unlisten1 = listen("update_info", (ev) => {
       setPhase({
         t:       "available",
@@ -62,7 +50,6 @@ export function Updater() {
       });
     });
 
-    // update_progress: real byte-level download progress during shared-drive copy.
     const unlisten2 = listen("update_progress", (ev) => {
       setPhase((prev) => {
         if (prev.t !== "downloading") return prev;
@@ -75,7 +62,6 @@ export function Updater() {
       });
     });
 
-    // update_phase: Rust signals entry into verifying / installing / launching.
     const unlisten3 = listen("update_phase", (ev) => {
       const next = ev.payload?.phase;
       if (next === "verifying" || next === "installing" || next === "launching") {
@@ -86,7 +72,6 @@ export function Updater() {
       }
     });
 
-    // Signal Rust that all listeners are registered; safe to emit update_info.
     Promise.all([unlisten1, unlisten2, unlisten3]).then(() => {
       emit("updater_ready");
     });
@@ -98,7 +83,6 @@ export function Updater() {
     };
   }, []);
 
-  // ── Install Now handler ───────────────────────────────────────────────────
   const handleInstall = () => {
     setPhase((prev) => ({
       t:           "downloading",
@@ -114,7 +98,7 @@ export function Updater() {
       try {
         logPath = await appLogDir();
       } catch {
-        // best-effort; log path may be unavailable in dev builds
+        // best-effort
       }
       setPhase((prev) => ({
         t:           "error",
@@ -126,19 +110,17 @@ export function Updater() {
     });
   };
 
-  // ── Phase: checking ───────────────────────────────────────────────────────
   if (phase.t === "checking") {
     return (
       <div className="updater-root">
         <div className="updater-phase-indicator">
           <span className="updater-spinner" aria-hidden="true" />
-          <span className="updater-phase-label">Checking for updates\u2026</span>
+          <span className="updater-phase-label">Checking for updates…</span>
         </div>
       </div>
     );
   }
 
-  // ── Phase: available (confirmation modal) ─────────────────────────────────
   if (phase.t === "available") {
     return (
       <UpdateModal
@@ -149,7 +131,6 @@ export function Updater() {
     );
   }
 
-  // ── Phases: downloading / verifying / installing / launching / error ──────
   return <UpdateProgress phase={phase} />;
 }
 
@@ -164,5 +145,4 @@ export function mountUpdater(rootElement = document.getElementById("root")) {
   );
 }
 
-// Backward-compatible auto-mount.
 mountUpdater();

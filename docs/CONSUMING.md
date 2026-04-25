@@ -17,9 +17,10 @@ jump back to any part later.
 4. [GitHub Actions workflow setup](#github-actions-workflow-setup)
 5. [Local development setup](#local-development-setup)
 6. [Updater shim integration (Rust)](#updater-shim-integration-rust)
-7. [Versioning policy](#versioning-policy)
-8. [Troubleshooting](#troubleshooting)
-9. [Onboarding checklist](#onboarding-checklist)
+7. [Window flash prevention](#window-flash-prevention)
+8. [Versioning policy](#versioning-policy)
+9. [Troubleshooting](#troubleshooting)
+10. [Onboarding checklist](#onboarding-checklist)
 
 ---
 
@@ -717,6 +718,95 @@ pub fn start_update(app: tauri::AppHandle, installer_path: &Path) {
 
 ---
 
+## Window flash prevention
+
+By default, Tauri creates the main window with `visible: false` (configured in
+`tauri.conf.json` and `tauri.conf.json.template`). The window also has a
+`backgroundColor` of `#1C1B19` so that if it becomes visible before JS takes
+over, the background matches the Chamber 19 design system instead of showing
+white.
+
+To reveal the window after React has rendered its first frame, call
+`showOnReady()` from your frontend entry point.
+
+### Quick start
+
+In your `frontend/src/main.jsx` (or `main.tsx`):
+
+```jsx name=frontend/src/main.jsx
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { showOnReady } from "@chamber-19/desktop-toolkit/window/showOnReady";
+import App from "./App.jsx";
+
+createRoot(document.getElementById("root")).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+// Reveal the main window after the React tree has committed its first frame.
+// Remove this call and the window will stay invisible forever.
+showOnReady();
+```
+
+> **Warning:** If you omit the `showOnReady()` call after upgrading, the main
+> window will be invisible forever — the user will see nothing after launch.
+
+### Hook variant
+
+If you prefer to co-locate the call with a component, use the `useShowOnReady`
+hook at the root of your tree:
+
+```jsx
+import { useShowOnReady } from "@chamber-19/desktop-toolkit/window/showOnReady";
+
+function App() {
+  useShowOnReady();
+  return <YourApp />;
+}
+```
+
+Both variants are no-ops when running outside a Tauri context (e.g. a Vite
+dev server opened in a plain browser) — no guard required on your side.
+
+### How it works
+
+The window config sets:
+
+```json
+{
+  "visible": false,
+  "backgroundColor": "#1C1B19"
+}
+```
+
+`showOnReady()` / `useShowOnReady` call `getCurrentWindow().show()` inside a
+`requestAnimationFrame` callback, which fires after the browser has committed
+and painted the React tree. This eliminates the blank/white window flash that
+occurs when a Tauri app renders slowly on first load or immediately after an
+auto-update relaunch.
+
+### Migration for existing consumers
+
+If your app was built before this pattern was introduced, add the
+`showOnReady()` call to your existing `main.jsx`:
+
+1. Confirm your `tauri.conf.json` main window has `"visible": false` and
+   `"backgroundColor": "#1C1B19"`.  If it still has `"visible": true`, add
+   those two fields.
+2. Add the import and call to `main.jsx` as shown above.
+3. Build and test: the window should appear with a dark background as soon as
+   React renders, with no visible flash.
+
+> **Note:** Apps that use the splash-screen startup sequence (in the
+> `tauri-template`) show the main window from Rust after the splash completes.
+> Adding `showOnReady()` to the JS side is still recommended — it provides an
+> extra guarantee that the window is not revealed before React commits, without
+> any conflict (calling `show()` on an already-visible window is a no-op).
+
+---
+
 ## Versioning policy
 
 ### Pin rules
@@ -816,6 +906,8 @@ items as you complete them.
 - [ ] Added `@chamber-19/desktop-toolkit@^2.2.8` to `frontend/package.json` dependencies
 - [ ] Added `"prebuild": "desktop-toolkit-sync-installer-assets"` to `frontend/package.json` scripts
 - [ ] Added `"desktop-toolkit-updater.exe"` to `bundle.resources` in `frontend/src-tauri/tauri.conf.json`
+- [ ] Confirmed main window config has `"visible": false` and `"backgroundColor": "#1C1B19"` in `tauri.conf.json`
+- [ ] Added `showOnReady()` call to `frontend/src/main.jsx` (see [Window flash prevention](#window-flash-prevention))
 - [ ] Pinned `desktop-toolkit` git tag in `frontend/src-tauri/Cargo.toml`
 - [ ] (If using Python) Added `chamber19-desktop-toolkit @ git+…@v2.2.8` to `backend/requirements.txt`
 - [ ] Added `.github/workflows/release.yml` with the preflight step + `GITHUB_TOKEN` auth
