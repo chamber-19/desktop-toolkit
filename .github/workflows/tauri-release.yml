@@ -1,0 +1,283 @@
+name: Tauri Release (reusable)
+
+# Reusable workflow — called by consumer repos via workflow_call.
+# Callers must pin to @main during the DLM bring-up window.
+# Once the workflow is tagged v1, callers must pin to @v1.
+#
+# Minimal caller stub:
+#
+#   jobs:
+#     release:
+#       uses: chamber-19/desktop-toolkit/.github/workflows/tauri-release.yml@main
+#       with:
+#         tool-display-name: "My Tool"
+#       secrets: inherit
+#
+# See docs/CONSUMING.md § "Reusable workflow" for full examples and input reference.
+
+on:
+  workflow_call:
+    inputs:
+      tool-display-name:
+        type: string
+        required: true
+        description: 'Human-readable name used in the GitHub Release title, e.g. "Transmittal Builder"'
+
+      frontend-dir:
+        type: string
+        required: false
+        default: "frontend"
+        description: "Path to the Vite + Tauri root"
+
+      backend-dir:
+        type: string
+        required: false
+        default: ""
+        description: "Path to Python backend directory; empty string = no Python sidecar"
+
+      backend-spec:
+        type: string
+        required: false
+        default: ""
+        description: "PyInstaller .spec filename (required when backend-dir is set)"
+
+      sidecar-name:
+        type: string
+        required: false
+        default: ""
+        description: "Sidecar dist folder + binary name (required when backend-dir is set)"
+
+      installer-glob:
+        type: string
+        required: false
+        default: "frontend/src-tauri/target/release/bundle/nsis/*.exe"
+        description: "Glob pattern to locate the built NSIS installer"
+
+      latest-json-script:
+        type: string
+        required: false
+        default: "scripts/generate-latest-json.mjs"
+        description: "Repo-relative path to the latest.json generator script"
+
+      python-version:
+        type: string
+        required: false
+        default: "3.13"
+        description: "Python version to set up (used only when backend-dir is set)"
+
+      node-version:
+        type: string
+        required: false
+        default: "20"
+        description: "Node.js version to set up"
+
+      use-desktop-toolkit-shim:
+        type: boolean
+        required: false
+        default: true
+        description: "When true, build and bundle desktop-toolkit-updater.exe"
+
+      shim-tag-source:
+        type: string
+        required: false
+        default: "cargo-metadata"
+        description: >
+          How to resolve the desktop-toolkit tag for the updater shim build.
+          "cargo-metadata" reads [package.metadata.desktop-toolkit].tag from
+          frontend/src-tauri/Cargo.toml. "input" uses the shim-tag input directly.
+
+      shim-tag:
+        type: string
+        required: false
+        default: ""
+        description: >
+          desktop-toolkit git tag to build the updater shim from, e.g. "v2.2.4".
+          Used only when shim-tag-source == "input"; ignored otherwise.
+
+    secrets:
+      WINDOWS_CERT_BASE64:
+        required: false
+      WINDOWS_CERT_PASSWORD:
+        required: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    permissions:
+      contents: write
+      packages: read
+
+    steps:
+      # ── 1. Checkout ─────────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # ── 2. Tool setup ───────────────────────────────────────────────────
+      - name: Set up Node.js ${{ inputs.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ inputs.node-version }}
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@chamber-19"
+          cache: "npm"
+          cache-dependency-path: ${{ inputs.frontend-dir }}/package-lock.json
+
+      - name: Set up Python ${{ inputs.python-version }}
+        if: inputs.backend-dir != ''
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Set up Rust (stable)
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          target: x86_64-pc-windows-msvc
+
+      - name: Cache Rust build artefacts
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ${{ inputs.frontend-dir }}/src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles(format('{0}/src-tauri/Cargo.lock', inputs.frontend-dir)) }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      # ── 3. Preflight — fail fast on auth errors ──────────────────────────
+      - name: Preflight — verify GitHub Packages access
+        shell: pwsh
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $headers = @{ Authorization = "Bearer $env:NODE_AUTH_TOKEN" }
+          try {
+            $resp = Invoke-WebRequest -Uri "https://npm.pkg.github.com/@chamber-19/desktop-toolkit" -Headers $headers -UseBasicParsing -ErrorAction Stop
+            Write-Host "✓ GitHub Packages auth OK (HTTP $($resp.StatusCode))"
+          } catch {
+            Write-Host "::error::Cannot authenticate to GitHub Packages for @chamber-19/desktop-toolkit. Error: $($_.Exception.Message)"
+            Write-Host "::error::Ensure this repo is granted access at https://github.com/orgs/chamber-19/packages/npm/desktop-toolkit/settings (Manage Actions access)."
+            throw
+          }
+
+      # ── 4. Python backend → PyInstaller sidecar ─────────────────────────
+      - name: Install backend dependencies
+        if: inputs.backend-dir != ''
+        run: pip install -r requirements.txt -r requirements-build.txt
+        working-directory: ${{ inputs.backend-dir }}
+
+      - name: Build PyInstaller sidecar
+        if: inputs.backend-dir != ''
+        run: pyinstaller ${{ inputs.backend-spec }} --distpath dist-sidecar --workpath build-sidecar
+        working-directory: ${{ inputs.backend-dir }}
+
+      - name: Copy sidecar to Tauri resources
+        if: inputs.backend-dir != ''
+        shell: pwsh
+        run: |
+          $dest = "${{ inputs.frontend-dir }}\src-tauri\binaries\${{ inputs.sidecar-name }}"
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item -Recurse -Force "${{ inputs.backend-dir }}\dist-sidecar\${{ inputs.sidecar-name }}\*" $dest
+          Write-Host "Sidecar copied to $dest"
+
+      # ── 5. Build desktop-toolkit-updater shim ───────────────────────────
+      - name: Build desktop-toolkit-updater shim
+        if: inputs.use-desktop-toolkit-shim
+        shell: pwsh
+        run: |
+          if ("${{ inputs.shim-tag-source }}" -eq "cargo-metadata") {
+            $cargoToml = Get-Content "${{ inputs.frontend-dir }}/src-tauri/Cargo.toml" -Raw
+            $match = [regex]::Match($cargoToml, '\[package\.metadata\.desktop-toolkit\][^\[]*tag\s*=\s*"([^"]+)"')
+            if (-not $match.Success) {
+              throw "Could not find [package.metadata.desktop-toolkit].tag in ${{ inputs.frontend-dir }}/src-tauri/Cargo.toml. Set shim-tag-source: input and provide shim-tag instead."
+            }
+            $tag = $match.Groups[1].Value
+          } else {
+            $tag = "${{ inputs.shim-tag }}"
+            if (-not $tag) {
+              throw "shim-tag-source is 'input' but shim-tag is empty. Provide a shim-tag value or set shim-tag-source: cargo-metadata."
+            }
+          }
+          Write-Host "Building desktop-toolkit-updater at $tag"
+          git clone --depth 1 --branch $tag https://github.com/chamber-19/desktop-toolkit.git "$env:RUNNER_TEMP\dtk"
+          Push-Location "$env:RUNNER_TEMP\dtk"
+          cargo build --release -p desktop-toolkit-updater
+          Pop-Location
+          Copy-Item "$env:RUNNER_TEMP\dtk\target\release\desktop-toolkit-updater.exe" `
+            "${{ inputs.frontend-dir }}/src-tauri/desktop-toolkit-updater.exe"
+          Write-Host "✓ desktop-toolkit-updater.exe copied to ${{ inputs.frontend-dir }}/src-tauri/"
+
+      # ── 6. Frontend build ────────────────────────────────────────────────
+      - name: Install frontend dependencies
+        run: npm ci
+        working-directory: ${{ inputs.frontend-dir }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Vite frontend
+        run: npm run build
+        working-directory: ${{ inputs.frontend-dir }}
+
+      # ── 7. Clean cached bundle outputs ───────────────────────────────────
+      - name: Clean cached NSIS bundle outputs
+        shell: pwsh
+        run: |
+          $bundleDir = "${{ inputs.frontend-dir }}\src-tauri\target\release\bundle\nsis"
+          if (Test-Path $bundleDir) {
+            Remove-Item -Recurse -Force $bundleDir
+            Write-Host "Removed cached NSIS bundle directory: $bundleDir"
+          } else {
+            Write-Host "No cached NSIS bundle directory found at $bundleDir"
+          }
+
+      # ── 8. Tauri build ───────────────────────────────────────────────────
+      - name: Build Tauri app (NSIS installer)
+        run: npx tauri build
+        working-directory: ${{ inputs.frontend-dir }}
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
+
+      # ── 9. Locate built artefacts ────────────────────────────────────────
+      - name: Locate NSIS installer
+        id: find_installer
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          $allInstallers = Get-ChildItem -Path "${{ inputs.installer-glob }}" -File
+          if (-not $allInstallers) { throw "NSIS installer not found at: ${{ inputs.installer-glob }}" }
+
+          $escapedVersion = [regex]::Escape($version)
+          $versionedInstallers = $allInstallers |
+            Where-Object { $_.Name -match "(^|[^0-9])$escapedVersion([^0-9]|$)" } |
+            Sort-Object LastWriteTimeUtc -Descending
+
+          if ($versionedInstallers) {
+            $exe = $versionedInstallers | Select-Object -First 1
+          } else {
+            Write-Warning "No installer filename matched version $version. Falling back to newest installer by timestamp."
+            $exe = $allInstallers | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+          }
+
+          if (-not $exe) { throw "NSIS installer not found!" }
+          echo "path=$($exe.FullName)" >> $env:GITHUB_OUTPUT
+          echo "name=$($exe.Name)"     >> $env:GITHUB_OUTPUT
+          Write-Host "Installer: $($exe.FullName)"
+
+      # ── 10. Generate latest.json ──────────────────────────────────────────
+      - name: Generate latest.json
+        run: node ${{ inputs.latest-json-script }}
+        env:
+          INSTALLER_NAME: ${{ steps.find_installer.outputs.name }}
+          TAG_NAME:       ${{ github.ref_name }}
+
+      # ── 11. Create GitHub Release ────────────────────────────────────────
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name:     "${{ inputs.tool-display-name }} ${{ github.ref_name }}"
+          fail_on_unmatched_files: true
+          files: |
+            ${{ steps.find_installer.outputs.path }}
+            latest.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

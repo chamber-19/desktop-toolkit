@@ -527,6 +527,70 @@ jobs:
 - [ ] Verify `generate-latest-json.mjs` exists (copy from `desktop-toolkit/build-scripts/`)
 - [ ] Repo has been granted access on the package settings page (step 1 of the repo checklist)
 
+### Reusable workflow (recommended for new consumers)
+
+New consumers should call the reusable `tauri-release.yml` workflow instead of
+copy-pasting the full `release.yml` above. The workflow lives in this repo and
+all consumers inherit bug fixes and action-version upgrades automatically when
+the workflow moves forward.
+
+> **Note:** Until this workflow is tagged `v1`, callers must pin to `@main`.
+> Once `v1` is cut, callers must update their pin to `@v1`.
+
+#### Versioning policy
+
+> The reusable workflow follows a frozen-major-tag policy modeled on
+> `actions/checkout`. `@v1` will receive non-breaking fixes by moving the
+> `v1` tag forward. When breaking changes are needed, a new `v2` tag is
+> created, and the `v1` tag is **frozen** — it does not move once `v2` exists.
+> Consumers migrate from `@v1` to `@v2` deliberately.
+
+#### Caller example: tool with Python sidecar (TB-shaped)
+
+```yaml name=.github/workflows/release.yml
+# .github/workflows/release.yml in the consumer repo
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    uses: chamber-19/desktop-toolkit/.github/workflows/tauri-release.yml@main
+    with:
+      tool-display-name: "Transmittal Builder"
+      backend-dir: "backend"
+      backend-spec: "transmittal_backend.spec"
+      sidecar-name: "transmittal-backend"
+    secrets: inherit
+```
+
+#### Caller example: tool without Python sidecar, hardcoded shim tag (launcher-shaped)
+
+```yaml name=.github/workflows/release.yml
+# .github/workflows/release.yml in the consumer repo
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    uses: chamber-19/desktop-toolkit/.github/workflows/tauri-release.yml@main
+    with:
+      tool-display-name: "Shopvac"
+      shim-tag-source: "input"
+      shim-tag: "v2.2.4"
+    secrets: inherit
+```
+
+All available inputs are documented at the top of
+[`.github/workflows/tauri-release.yml`](../.github/workflows/tauri-release.yml).
+
+---
+
 ### `copilot-setup-steps.yml` (optional)
 
 If you want Copilot coding agent support, commit this workflow. It pre-installs all build
