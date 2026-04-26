@@ -534,8 +534,8 @@ copy-pasting the full `release.yml` above. The workflow lives in this repo and
 all consumers inherit bug fixes and action-version upgrades automatically when
 the workflow moves forward.
 
-> **Note:** During the DLM bring-up window, callers should pin to `@main`.
-> Once the workflow is tagged `v1`, callers must pin to `@v1`.
+> **Note:** Until this workflow is tagged `v1`, callers must pin to `@main`.
+> Once `v1` is cut, callers must update their pin to `@v1`.
 
 #### Versioning policy
 

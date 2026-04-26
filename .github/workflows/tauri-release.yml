@@ -186,7 +186,7 @@ jobs:
         run: |
           if ("${{ inputs.shim-tag-source }}" -eq "cargo-metadata") {
             $cargoToml = Get-Content "${{ inputs.frontend-dir }}/src-tauri/Cargo.toml" -Raw
-            $match = [regex]::Match($cargoToml, '(?ms)\[package\.metadata\.desktop-toolkit\].*?tag\s*=\s*"([^"]+)"')
+            $match = [regex]::Match($cargoToml, '\[package\.metadata\.desktop-toolkit\][^\[]*tag\s*=\s*"([^"]+)"')
             if (-not $match.Success) {
               throw "Could not find [package.metadata.desktop-toolkit].tag in ${{ inputs.frontend-dir }}/src-tauri/Cargo.toml. Set shim-tag-source: input and provide shim-tag instead."
             }
@@ -198,11 +198,11 @@ jobs:
             }
           }
           Write-Host "Building desktop-toolkit-updater at $tag"
-          git clone --depth 1 --branch $tag https://github.com/chamber-19/desktop-toolkit.git /tmp/dtk
-          Push-Location /tmp/dtk
+          git clone --depth 1 --branch $tag https://github.com/chamber-19/desktop-toolkit.git "$env:RUNNER_TEMP\dtk"
+          Push-Location "$env:RUNNER_TEMP\dtk"
           cargo build --release -p desktop-toolkit-updater
           Pop-Location
-          Copy-Item /tmp/dtk/target/release/desktop-toolkit-updater.exe `
+          Copy-Item "$env:RUNNER_TEMP\dtk\target\release\desktop-toolkit-updater.exe" `
             "${{ inputs.frontend-dir }}/src-tauri/desktop-toolkit-updater.exe"
           Write-Host "✓ desktop-toolkit-updater.exe copied to ${{ inputs.frontend-dir }}/src-tauri/"
 
