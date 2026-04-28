@@ -14,4 +14,4 @@ name = "desktop-toolkit-updater"
 path = "src/main.rs"
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.59", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }
+windows-sys = { version = "0.61", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }

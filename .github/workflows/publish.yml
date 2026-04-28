@@ -48,7 +48,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2.0.9
+        uses: softprops/action-gh-release@v3.0.0
         with:
           tag_name: ${{ github.ref_name }}
           name: ${{ github.ref_name }}
