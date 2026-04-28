@@ -1,20 +1,46 @@
 version: 2
 updates:
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    schedule: { interval: "weekly" }
-    labels:
-      - "dependencies"
-      - "github-actions"
   - package-ecosystem: "cargo"
     directory: "/"
-    schedule: { interval: "weekly" }
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "rust"
+
   - package-ecosystem: "npm"
-    directory: "/js/packages/desktop-toolkit"
-    schedule: { interval: "weekly" }
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "javascript"
+
+  - package-ecosystem: "pip"
+    directory: "/python"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+
+  - package-ecosystem: "pip"
+    directory: "/python/chamber19_desktop_toolkit/pyinstaller"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
