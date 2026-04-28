@@ -508,7 +508,7 @@ jobs:
 
       # ── 11. Create GitHub Release ────────────────────────────────────────
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v3.0.0
         with:
           tag_name: ${{ github.ref_name }}
           name:     "MY_TOOL_DISPLAY_NAME ${{ github.ref_name }}"

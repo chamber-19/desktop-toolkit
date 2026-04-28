@@ -6,6 +6,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Changed
+
+- Pinned `softprops/action-gh-release` to `v3.0.0` (Node 24 runtime) in
+  `publish.yml`, `tauri-release.yml`, and the consumer-facing
+  `release-tauri-sidecar-app.yml.template`. Replaces the floating `@v3` tag
+  and upgrades `publish.yml` from `v2.0.9`.
+- Bumped `windows-sys` from `0.59` to `0.61` in `desktop-toolkit-updater`.
+
 ## [2.3.0] — 2026-04-25
 
 ### Changed
