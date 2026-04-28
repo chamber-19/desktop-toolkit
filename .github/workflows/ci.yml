@@ -49,7 +49,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Install JS package deps
@@ -251,7 +251,7 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
           registry-url: "https://npm.pkg.github.com"
@@ -346,7 +346,7 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - name: Verify root JS package-lock matches package.json
