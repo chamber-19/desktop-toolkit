@@ -1,0 +1,10 @@
+# Automatically normalise line endings for all text files
+* text=auto
+
+# Windows-style line endings
+*.cs    text eol=crlf
+*.csproj text eol=crlf
+
+# Unix-style line endings
+*.toml  text eol=lf
+*.md    text eol=lf
